@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>影片筆記工具</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">🎬 影片筆記工具</h1>
+
+    <!-- 影片上傳 -->
+    <div class="mb-4">
+      <input type="file" id="videoInput" accept="video/*" class="mb-2">
+      <video id="videoPlayer" controls class="w-full rounded shadow"></video>
+    </div>
+
+    <!-- 筆記輸入 -->
+    <div class="mb-4">
+      <input type="text" id="noteInput" placeholder="輸入筆記..." class="border p-2 rounded w-3/4">
+      <button id="addNote" class="bg-blue-500 text-white px-4 py-2 rounded ml-2">新增筆記</button>
+      <button id="exportNotes" class="bg-green-500 text-white px-4 py-2 rounded ml-2">匯出筆記</button>
+    </div>
+
+    <!-- 筆記列表 -->
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold mb-2">📝 筆記列表</h2>
+      <ul id="notesList" class="space-y-2"></ul>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const videoInput = document.getElementById('videoInput');
+    const noteInput = document.getElementById('noteInput');
+    const notesList = document.getElementById('notesList');
+    const exportBtn = document.getElementById('exportNotes');
+    const notes = [];
+
+    videoInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        video.src = URL.createObjectURL(file);
+      }
+    });
+
+    document.getElementById('addNote').addEventListener('click', function () {
+      const time = video.currentTime;
+      const text = noteInput.value.trim();
+      if (text) {
+        notes.push({ time, text });
+        renderNotes();
+        noteInput.value = '';
+      }
+    });
+
+    function renderNotes() {
+      notesList.innerHTML = '';
+      notes.forEach(note => {
+        const li = document.createElement('li');
+        li.innerHTML = `<button class="text-blue-600 underline" onclick="document.getElementById('videoPlayer').currentTime=${note.time}">[${formatTime(note.time)}]</button> ${note.text}`;
+        notesList.appendChild(li);
+      });
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    exportBtn.addEventListener('click', function () {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(notes, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", "video_notes.json");
+      dlAnchor.click();
+    });
+  </script>
+</body>
+</html>
