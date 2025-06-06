@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>影片播放器 + 右側筆記 (可編輯)</title>
+<style>
+  html, body {
+    margin:0; padding:0; height:100%; background:black;
+    overflow: hidden;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    color: white;
+  }
+  #videoPlayer {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: black;
+    transform: scale(1.05) translateY(-6%);
+    transform-origin: center center;
+    z-index: 0;
+    display: block;
+  }
+  input[type="file"] {
+    position: fixed; top: 10px; left: 10px; z-index: 100;
+  }
+  #notesContainer {
+    position: fixed;
+    top: 0;
+    left: calc(100vw - 400px);
+    width: 400px;
+    bottom: 60px;
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    box-sizing: border-box;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.5);
+    z-index: 10;
+    overflow: hidden;
+    cursor: move;
+    user-select: none;
+  }
+  #addNoteForm {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+  #addNoteForm input[type="text"] {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline-offset: 2px;
+  }
+  #addNoteForm button {
+    padding: 6px 16px;
+    font-size: 14px;
+    background: #4CAF50;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  #addNoteForm button:hover {
+    background: #45a049;
+  }
+  #notes {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 14px;
+    background: white;
+    color: black;
+    border-radius: 4px;
+    padding: 5px;
+  }
+  #notes div.note {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  #notes div.note:hover {
+    background-color: #e8e8e8;
+  }
+  #notes div.note .time {
+    flex-shrink: 0;
+    width: 70px;
+    background-color: #ddd;
+    color: #666;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-right: 10px;
+  }
+  #notes div.note .text {
+    flex-grow: 1;
+    padding-right: 10px;
+  }
+  #notes div.note button.deleteBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+  #notes div.note button.deleteBtn:hover {
+    opacity: 1;
+  }
+  #notes div.note button.deleteBtn::before, 
+  #notes div.note button.deleteBtn::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 4px;
+    width: 2px;
+    height: 12px;
+    background-color: #d9534f;
+  }
+  #notes div.note button.deleteBtn::before {
+    transform: rotate(45deg);
+  }
+  #notes div.note button.deleteBtn::after {
+    transform: rotate(-45deg);
+  }
+  #notes div.note button.editBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #007bff;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    margin-right: 6px;
+  }
+  #notes div.note button.editBtn:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+  #saveLoadBtns {
+    margin-top: 6px;
+    display: flex;
+    gap: 10px;
+  }
+  #saveBtn, #loadBtn {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    color: white;
+  }
+  #saveBtn {
+    background-color: #007bff;
+  }
+  #saveBtn:hover {
+    background-color: #0069d9;
+  }
+  #loadBtn {
+    background-color: #6c757d;
+  }
+  #loadBtn:hover {
+    background-color: #5a6268;
+  }
+</style>
+</head>
+<body tabindex="0">
+
+<input type="file" id="videoInput" accept="video/*" />
+<video id="videoPlayer" autoplay controls></video>
+
+<div id="notesContainer">
+  <form id="addNoteForm">
+    <input type="text" id="noteTime" placeholder="時間 (秒/mm:ss/hh:mm:ss)" required />
+    <input type="text" id="noteText" placeholder="筆記內容" required />
+    <button type="submit">新增筆記</button>
+  </form>
+  <div id="notes"></div>
+  <div id="saveLoadBtns">
+    <button id="saveBtn" type="button" title="下載筆記">💾 下載筆記</button>
+    <button id="loadBtn" type="button" title="載入筆記檔">📂 載入筆記</button>
+  </div>
+  <input type="file" id="loadNotesFile" style="display:none" accept=".json" />
+</div>
+
+<script>
+const video = document.getElementById('videoPlayer');
+const input = document.getElementById('videoInput');
+const notesDiv = document.getElementById('notes');
+const addNoteForm = document.getElementById('addNoteForm');
+const noteTimeInput = document.getElementById('noteTime');
+const noteTextInput = document.getElementById('noteText');
+const saveBtn = document.getElementById('saveBtn');
+const loadBtn = document.getElementById('loadBtn');
+const loadNotesFile = document.getElementById('loadNotesFile');
+const notesContainer = document.getElementById('notesContainer');
+
+let notes = [];
+
+function renderNotes() {
+  notesDiv.innerHTML = "";
+  notes.sort((a,b) => a.time - b.time);
+  notes.forEach((note, idx) => {
+    const div = document.createElement('div');
+    div.className = "note";
+
+    div.onclick = (e) => {
+      if (e.target.classList.contains('deleteBtn') || e.target.classList.contains('editBtn')) return;
+      video.currentTime = note.time;
+      video.play();
+    };
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = "time";
+    timeDiv.textContent = formatTime(note.time);
+
+    const textDiv = document.createElement('div');
+    textDiv.className = "text";
+    textDiv.textContent = note.text;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = "editBtn";
+    editBtn.title = "編輯筆記";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      const newText = prompt("修改筆記內容：", note.text);
+      if (newText !== null) {
+        notes[idx].text = newText.trim();
+        renderNotes();
+      }
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = "deleteBtn";
+    delBtn.title = "刪除筆記";
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      if(confirm("確定要刪除此筆記？")) {
+        notes.splice(idx, 1);
+        renderNotes();
+      }
+    };
+
+    div.appendChild(timeDiv);
+    div.appendChild(textDiv);
+    div.appendChild(editBtn);
+    div.appendChild(delBtn);
+    notesDiv.appendChild(div);
+  });
+}
+
+function formatTime(sec) {
+  let h = Math.floor(sec / 3600);
+  let m = Math.floor((sec % 3600) / 60);
+  let s = Math.floor(sec % 60);
+  if(h > 0){
+    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  } else {
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+}
+
+function parseTime(input) {
+  input = input.trim();
+  if(/^\d+$/.test(input)) return parseInt(input, 10);
+  let parts = input.split(':').map(p => parseInt(p,10));
+  if(parts.length === 2) return parts[0]*60 + parts[1];
+  if(parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+  return NaN;
+}
+
+addNoteForm.onsubmit = (e) => {
+  e.preventDefault();
+  const t = parseTime(noteTimeInput.value);
+  if(isNaN(t) || t < 0 || t > video.duration) {
+    alert("請輸入有效的時間 (秒/mm:ss/hh:mm:ss)，且不得超過影片長度");
+    return;
+  }
+  const text = noteTextInput.value.trim();
+  if(text.length === 0) {
+    alert("請輸入筆記內容");
+    return;
+  }
+  notes.push({time: t, text});
+  renderNotes();
+  noteTimeInput.value = "";
+  noteTextInput.value = "";
+};
+
+saveBtn.onclick = () => {
+  const dataStr = JSON.stringify(notes, null, 2);
+  const blob = new Blob([dataStr], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'video_notes.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+loadBtn.onclick = () => {
+  loadNotesFile.click();
+};
+
+loadNotesFile.addEventListener('change', () => {
+  if(loadNotesFile.files.length > 0){
+    const file = loadNotesFile.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const loadedNotes = JSON.parse(e.target.result);
+        if(Array.isArray(loadedNotes)){
+          notes = loadedNotes.filter(n => typeof n.time === 'number' && typeof n.text === 'string');
+          renderNotes();
+        } else {
+          alert("載入筆記格式錯誤");
+        }
+      } catch(e) {
+        alert("載入筆記失敗: " + e.message);
+      }
+    }
+    reader.readAsText(file);
+  }
+});
+
+input.addEventListener('change', e => {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  video.src = url;
+  video.play();
+  document.body.focus();
+});
+
+window.addEventListener('keydown', e => {
+  if(['ArrowLeft','ArrowRight',' ','f'].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+window.addEventListener('keydown', e => {
+  switch(e.key){
+    case 'ArrowLeft':
+      video.currentTime = Math.max(0, video.currentTime - 3);
+      break;
+    case 'ArrowRight':
+      video.currentTime = Math.min(video.duration, video.currentTime + 3);
+      break;
+    case ' ':
+      if(video.paused) video.play();
+      else video.pause();
+      break;
+    case 'f':
+      if(document.fullscreenElement) document.exitFullscreen();
+      else video.requestFullscreen();
+      break;
+  }
+});
+
+// ✨ 點影片自動填入目前時間到時間欄位
+video.addEventListener('click', () => {
+  const current = Math.floor(video.currentTime);
+  noteTimeInput.value = formatTime(current);
+  noteTextInput.focus();
+});
+
+// 拖動功能
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let startLeft = 0;
+let startTop = 0;
+
+notesContainer.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  const style = window.getComputedStyle(notesContainer);
+  startLeft = parseInt(style.left, 10) || 0;
+  startTop = parseInt(style.top, 10) || 0;
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const deltaX = e.clientX - dragStartX;
+  const deltaY = e.clientY - dragStartY;
+  notesContainer.style.left = (startLeft + deltaX) + 'px';
+  notesContainer.style.top = (startTop + deltaY) + 'px';
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+renderNotes();
+</script>
+</body>
+</html>
