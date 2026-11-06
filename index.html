@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html translate="no">
+<html class="notranslate" translate="no">
 <head>
 <meta charset="utf-8" />
 <meta name="google" content="notranslate" />
-<title>影片播放器 + 右側筆記 (禁用Google翻譯)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>影片播放器 + 右側筆記 (完美防翻譯干擾)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -324,12 +325,12 @@
   #handle-br { bottom: 0; right: 0; cursor: nwse-resize; }
 </style>
 </head>
-<body tabindex="0" class="notranslate">
+<body tabindex="0" class="notranslate" translate="no">
 
 <input type="file" id="videoInput" accept="video/*" />
 <video id="videoPlayer" autoplay controls></video>
 
-<div id="notesContainer" class="notranslate">
+<div id="notesContainer" class="notranslate" translate="no">
   <div class="corner-handle" id="handle-tl"></div>
   <div class="corner-handle" id="handle-tr"></div>
   <div class="corner-handle" id="handle-bl"></div>
@@ -341,7 +342,7 @@
       <button type="submit" id="submitBtn">新增筆記</button>
       
       <button type="button" id="symbolBtn" onclick="toggleSymbolPicker(event)">★ 符號</button>
-      <div id="symbolPicker"></div>
+      <div id="symbolPicker" class="notranslate" translate="no"></div>
 
       <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
         <option value="" disabled selected>字體大小</option>
@@ -357,7 +358,7 @@
       <button type="button" id="boldBtn" onclick="toggleBold()" title="粗體"><b>B</b></button>
     </div>
     
-    <div id="noteText" class="notranslate" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
+    <div id="noteText" class="notranslate" translate="no" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
     
     <div class="color-btn-group">
       <button type="button" class="color-btn" style="background-color: #333333;" onclick="changeTextColor('#333333')">黑</button>
@@ -368,7 +369,7 @@
     </div>
   </form>
 
-  <div id="notes" class="notranslate"></div>
+  <div id="notes" class="notranslate" translate="no"></div>
 
   <div id="saveLoadBtns">
     <button id="saveBtn" type="button" title="下載筆記">💾 下載筆記</button>
@@ -399,6 +400,7 @@ const symbols = ['⮕', '【', '】', '｢', '｣', '①', '②', '③', '④', 
 symbols.forEach(sym => {
   const span = document.createElement('span');
   span.className = 'symbol-item notranslate';
+  span.setAttribute('translate', 'no');
   span.textContent = sym;
   span.onclick = (e) => {
     e.stopPropagation();
@@ -445,6 +447,7 @@ function renderNotes() {
   notes.forEach((note, idx) => {
     const div = document.createElement('div');
     div.className = "note notranslate";
+    div.setAttribute('translate', 'no');
 
     div.onclick = (e) => {
       if (e.target.classList.contains('deleteBtn') || e.target.classList.contains('editBtn')) return;
@@ -454,15 +457,18 @@ function renderNotes() {
 
     const timeDiv = document.createElement('div');
     timeDiv.className = "time notranslate";
+    timeDiv.setAttribute('translate', 'no');
     timeDiv.textContent = formatTime(note.time);
 
     const textDiv = document.createElement('div');
     textDiv.className = "text notranslate";
+    textDiv.setAttribute('translate', 'no');
     textDiv.innerHTML = note.text;
     textDiv.title = note.text.replace(/<[^>]*>/g, '');
 
     const editBtn = document.createElement('button');
     editBtn.className = "editBtn notranslate";
+    editBtn.setAttribute('translate', 'no');
     editBtn.title = "修改筆記";
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
@@ -477,6 +483,7 @@ function renderNotes() {
 
     const delBtn = document.createElement('button');
     delBtn.className = "deleteBtn notranslate";
+    delBtn.setAttribute('translate', 'no');
     delBtn.title = "刪除筆記";
     delBtn.onclick = (e) => {
       e.stopPropagation();
