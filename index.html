@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (客製化色彩與粗體)</title>
+<title>影片播放器 + 右側筆記 (懸停顯示完整筆記)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -54,7 +54,7 @@
     align-items: center;
   }
   #noteTime {
-    width: 75px;
+    width: 60px;
     padding: 2px 4px;
     font-size: 11px;
     border: 1px solid #ccc;
@@ -69,7 +69,7 @@
     flex: 1;
     padding: 3px 6px;
     font-size: 11px;
-    background: #0000FF; /* 換成指定深藍色 */
+    background: #0000FF;
     border: none;
     border-radius: 3px;
     color: white;
@@ -82,9 +82,18 @@
   #submitBtn.editing { background: #ffc107; color: #333; }
   #submitBtn.editing:hover { background: #e0a800; }
 
-  /* 💡 新增粗體按鈕放在新增筆記右邊 */
+  #fontSizeSelect {
+    padding: 2px 2px;
+    font-size: 11px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+  }
+
   #boldBtn {
-    padding: 3px 8px;
+    padding: 3px 6px;
     font-size: 11px;
     font-weight: bold;
     background: #666;
@@ -153,7 +162,7 @@
     display: flex;
     align-items: flex-start;
     border-bottom: 1px solid #eee;
-    padding: 3px 0;
+    padding: 4px 0;
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
@@ -170,13 +179,26 @@
     padding: 1px 2px;
     margin-right: 4px;
   }
+  
+  /* 💡 保留單行與手動換行，超出隱藏。滑鼠懸停時自動展開全部顯示 */
   #notes div.note .text {
     flex-grow: 1;
     padding-right: 4px;
-    word-break: break-all;
-    white-space: pre-wrap; 
+    white-space: pre; 
+    overflow: hidden;
     line-height: 1.3;
+    text-overflow: clip;
   }
+  #notes div.note:hover .text {
+    overflow: visible;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background: #fff;
+    z-index: 5;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
   #notes div.note button.deleteBtn {
     background: transparent;
     border: none;
@@ -207,7 +229,7 @@
     border: none;
     cursor: pointer;
     font-size: 10px;
-    color: #0000FF; /* 編輯按鈕改為指定藍色 */
+    color: #0000FF;
     opacity: 0.7;
     transition: opacity 0.2s ease;
     margin-right: 2px;
@@ -236,7 +258,7 @@
     transition: background-color 0.3s ease;
     color: white;
   }
-  #saveBtn { background-color: #0000FF; } /* 儲存按鈕改為指定藍色 */
+  #saveBtn { background-color: #0000FF; }
   #saveBtn:hover { background-color: #0000CC; }
   #loadBtn { background-color: #6c757d; }
   #loadBtn:hover { background-color: #5a6268; }
@@ -268,7 +290,18 @@
     <div class="time-submit-row">
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
-      <!-- 💡 新增粗體按鈕 -->
+      
+      <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
+        <option value="" disabled selected>字體大小</option>
+        <option value="1">極小 (1)</option>
+        <option value="2">小 (2)</option>
+        <option value="3">中 (3)</option>
+        <option value="4">稍大 (4)</option>
+        <option value="5">大 (5)</option>
+        <option value="6">特大 (6)</option>
+        <option value="7">最大 (7)</option>
+      </select>
+
       <button type="button" id="boldBtn" onclick="toggleBold()" title="粗體"><b>B</b></button>
     </div>
     
@@ -277,7 +310,6 @@
     <div class="color-btn-group">
       <button type="button" class="color-btn" style="background-color: #333333;" onclick="changeTextColor('#333333')">黑</button>
       <button type="button" class="color-btn" style="background-color: #0000FF;" onclick="changeTextColor('#0000FF')">藍</button>
-      <!-- 💡 綠色改為指定橘色 -->
       <button type="button" class="color-btn" style="background-color: #E64A19;" onclick="changeTextColor('#E64A19')">橘</button>
       <button type="button" class="color-btn" style="background-color: #6f42c1;" onclick="changeTextColor('#6f42c1')">紫</button>
       <button type="button" class="color-btn" style="background-color: #dc3545;" onclick="changeTextColor('#dc3545')">紅</button>
@@ -314,10 +346,15 @@ function changeTextColor(color) {
   document.execCommand('foreColor', false, color);
 }
 
-// 💡 切換粗體功能
 function toggleBold() {
   noteTextInput.focus();
   document.execCommand('bold', false, null);
+}
+
+function changeFontSize(size) {
+  if (!size) return;
+  noteTextInput.focus();
+  document.execCommand('fontSize', false, size);
 }
 
 function renderNotes() {
@@ -340,6 +377,8 @@ function renderNotes() {
     const textDiv = document.createElement('div');
     textDiv.className = "text";
     textDiv.innerHTML = note.text;
+    // 同時加上 title 屬性，滑鼠移上去時也會有瀏覽器內建的完整提示
+    textDiv.title = note.text.replace(/<[^>]*>/g, '');
 
     const editBtn = document.createElement('button');
     editBtn.className = "editBtn";
