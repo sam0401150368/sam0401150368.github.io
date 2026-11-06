@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html translate="no">
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (符號插入選單)</title>
+<meta name="google" content="notranslate" />
+<title>影片播放器 + 右側筆記 (禁用Google翻譯)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -83,7 +84,6 @@
   #submitBtn.editing { background: #ffc107; color: #333; }
   #submitBtn.editing:hover { background: #e0a800; }
 
-  /* 💡 符號按鈕樣式 */
   #symbolBtn {
     padding: 3px 5px;
     font-size: 11px;
@@ -97,7 +97,6 @@
   }
   #symbolBtn:hover { background: #333; }
 
-  /* 💡 符號彈出面板樣式 */
   #symbolPicker {
     display: none;
     position: absolute;
@@ -110,7 +109,6 @@
     padding: 4px;
     z-index: 100;
     width: 180px;
-    display: none;
     flex-wrap: wrap;
     gap: 3px;
   }
@@ -326,12 +324,12 @@
   #handle-br { bottom: 0; right: 0; cursor: nwse-resize; }
 </style>
 </head>
-<body tabindex="0">
+<body tabindex="0" class="notranslate">
 
 <input type="file" id="videoInput" accept="video/*" />
 <video id="videoPlayer" autoplay controls></video>
 
-<div id="notesContainer">
+<div id="notesContainer" class="notranslate">
   <div class="corner-handle" id="handle-tl"></div>
   <div class="corner-handle" id="handle-tr"></div>
   <div class="corner-handle" id="handle-bl"></div>
@@ -342,7 +340,6 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
       
-      <!-- 💡 符號按鈕與彈出的選擇面板 -->
       <button type="button" id="symbolBtn" onclick="toggleSymbolPicker(event)">★ 符號</button>
       <div id="symbolPicker"></div>
 
@@ -360,7 +357,7 @@
       <button type="button" id="boldBtn" onclick="toggleBold()" title="粗體"><b>B</b></button>
     </div>
     
-    <div id="noteText" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
+    <div id="noteText" class="notranslate" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
     
     <div class="color-btn-group">
       <button type="button" class="color-btn" style="background-color: #333333;" onclick="changeTextColor('#333333')">黑</button>
@@ -371,7 +368,7 @@
     </div>
   </form>
 
-  <div id="notes"></div>
+  <div id="notes" class="notranslate"></div>
 
   <div id="saveLoadBtns">
     <button id="saveBtn" type="button" title="下載筆記">💾 下載筆記</button>
@@ -397,13 +394,11 @@ const symbolPicker = document.getElementById('symbolPicker');
 let notes = [];
 let editingIndex = null;
 
-// 💡 指定符號清單
 const symbols = ['⮕', '【', '】', '｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
 
-// 初始化渲染符號圖示
 symbols.forEach(sym => {
   const span = document.createElement('span');
-  span.className = 'symbol-item';
+  span.className = 'symbol-item notranslate';
   span.textContent = sym;
   span.onclick = (e) => {
     e.stopPropagation();
@@ -424,7 +419,6 @@ function insertSymbol(sym) {
   document.execCommand('insertText', false, sym);
 }
 
-// 點擊頁面其他地方時關閉符號面板
 document.addEventListener('click', () => {
   symbolPicker.style.display = 'none';
 });
@@ -450,7 +444,7 @@ function renderNotes() {
   notes.sort((a,b) => a.time - b.time);
   notes.forEach((note, idx) => {
     const div = document.createElement('div');
-    div.className = "note";
+    div.className = "note notranslate";
 
     div.onclick = (e) => {
       if (e.target.classList.contains('deleteBtn') || e.target.classList.contains('editBtn')) return;
@@ -459,16 +453,16 @@ function renderNotes() {
     };
 
     const timeDiv = document.createElement('div');
-    timeDiv.className = "time";
+    timeDiv.className = "time notranslate";
     timeDiv.textContent = formatTime(note.time);
 
     const textDiv = document.createElement('div');
-    textDiv.className = "text";
+    textDiv.className = "text notranslate";
     textDiv.innerHTML = note.text;
     textDiv.title = note.text.replace(/<[^>]*>/g, '');
 
     const editBtn = document.createElement('button');
-    editBtn.className = "editBtn";
+    editBtn.className = "editBtn notranslate";
     editBtn.title = "修改筆記";
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
@@ -482,7 +476,7 @@ function renderNotes() {
     };
 
     const delBtn = document.createElement('button');
-    delBtn.className = "deleteBtn";
+    delBtn.className = "deleteBtn notranslate";
     delBtn.title = "刪除筆記";
     delBtn.onclick = (e) => {
       e.stopPropagation();
