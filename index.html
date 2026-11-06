@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (懸停顯示完整筆記)</title>
+<title>影片播放器 + 右側筆記 (符號插入選單)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -26,8 +26,8 @@
   #notesContainer {
     position: fixed;
     top: 0;
-    left: calc(100vw - 320px);
-    width: 320px;
+    left: calc(100vw - 340px);
+    width: 340px;
     height: calc(100vh - 40px);
     background: rgba(255,255,255,0.92);
     color: #333;
@@ -37,8 +37,8 @@
     box-sizing: border-box;
     box-shadow: -3px 0 10px rgba(0,0,0,0.5);
     z-index: 10;
-    overflow: hidden;
-    min-width: 220px;
+    overflow: visible;
+    min-width: 240px;
     min-height: 250px;
   }
   
@@ -52,9 +52,10 @@
     display: flex;
     gap: 3px;
     align-items: center;
+    position: relative;
   }
   #noteTime {
-    width: 60px;
+    width: 55px;
     padding: 2px 4px;
     font-size: 11px;
     border: 1px solid #ccc;
@@ -67,7 +68,7 @@
   }
   #submitBtn {
     flex: 1;
-    padding: 3px 6px;
+    padding: 3px 4px;
     font-size: 11px;
     background: #0000FF;
     border: none;
@@ -81,6 +82,57 @@
   #submitBtn:hover { background: #0000CC; }
   #submitBtn.editing { background: #ffc107; color: #333; }
   #submitBtn.editing:hover { background: #e0a800; }
+
+  /* 💡 符號按鈕樣式 */
+  #symbolBtn {
+    padding: 3px 5px;
+    font-size: 11px;
+    background: #555;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  #symbolBtn:hover { background: #333; }
+
+  /* 💡 符號彈出面板樣式 */
+  #symbolPicker {
+    display: none;
+    position: absolute;
+    top: 26px;
+    left: 80px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-radius: 4px;
+    padding: 4px;
+    z-index: 100;
+    width: 180px;
+    display: none;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .symbol-item {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    font-size: 12px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    color: #333;
+    user-select: none;
+  }
+  .symbol-item:hover {
+    background: #0000FF;
+    color: #fff;
+    border-color: #0000FF;
+  }
 
   #fontSizeSelect {
     padding: 2px 2px;
@@ -111,7 +163,7 @@
     min-height: 40px;
     max-height: 70px;
     padding: 3px 6px;
-    font-size: 10.5px;
+    font-size: xx-small; 
     border: 1px solid #ccc;
     border-radius: 3px;
     background: white;
@@ -127,6 +179,7 @@
   #noteText:empty:before {
     content: attr(placeholder);
     color: #999;
+    font-size: 10.5px;
   }
 
   .color-btn-group {
@@ -180,14 +233,12 @@
     margin-right: 4px;
   }
   
-  /* 💡 保留單行與手動換行，超出隱藏。滑鼠懸停時自動展開全部顯示 */
   #notes div.note .text {
     flex-grow: 1;
     padding-right: 4px;
     white-space: pre; 
     overflow: hidden;
     line-height: 1.3;
-    text-overflow: clip;
   }
   #notes div.note:hover .text {
     overflow: visible;
@@ -291,6 +342,10 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
       
+      <!-- 💡 符號按鈕與彈出的選擇面板 -->
+      <button type="button" id="symbolBtn" onclick="toggleSymbolPicker(event)">★ 符號</button>
+      <div id="symbolPicker"></div>
+
       <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
         <option value="" disabled selected>字體大小</option>
         <option value="1">極小 (1)</option>
@@ -337,9 +392,42 @@ const saveBtn = document.getElementById('saveBtn');
 const loadBtn = document.getElementById('loadBtn');
 const loadNotesFile = document.getElementById('loadNotesFile');
 const notesContainer = document.getElementById('notesContainer');
+const symbolPicker = document.getElementById('symbolPicker');
 
 let notes = [];
 let editingIndex = null;
+
+// 💡 指定符號清單
+const symbols = ['⮕', '【', '】', '｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
+
+// 初始化渲染符號圖示
+symbols.forEach(sym => {
+  const span = document.createElement('span');
+  span.className = 'symbol-item';
+  span.textContent = sym;
+  span.onclick = (e) => {
+    e.stopPropagation();
+    insertSymbol(sym);
+    symbolPicker.style.display = 'none';
+  };
+  symbolPicker.appendChild(span);
+});
+
+function toggleSymbolPicker(e) {
+  e.stopPropagation();
+  const isShow = symbolPicker.style.display === 'flex';
+  symbolPicker.style.display = isShow ? 'none' : 'flex';
+}
+
+function insertSymbol(sym) {
+  noteTextInput.focus();
+  document.execCommand('insertText', false, sym);
+}
+
+// 點擊頁面其他地方時關閉符號面板
+document.addEventListener('click', () => {
+  symbolPicker.style.display = 'none';
+});
 
 function changeTextColor(color) {
   noteTextInput.focus();
@@ -377,7 +465,6 @@ function renderNotes() {
     const textDiv = document.createElement('div');
     textDiv.className = "text";
     textDiv.innerHTML = note.text;
-    // 同時加上 title 屬性，滑鼠移上去時也會有瀏覽器內建的完整提示
     textDiv.title = note.text.replace(/<[^>]*>/g, '');
 
     const editBtn = document.createElement('button');
@@ -422,6 +509,7 @@ function resetForm() {
   noteTextInput.innerHTML = "";
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
+  document.execCommand('fontSize', false, '1');
 }
 
 function formatTime(sec) {
@@ -578,7 +666,8 @@ let startWidth = 0, startHeight = 0;
 notesContainer.addEventListener('mousedown', (e) => {
   const isInteractive = e.target.closest('#addNoteForm') || 
                         e.target.closest('#notes div.note') || 
-                        e.target.closest('#saveLoadBtns');
+                        e.target.closest('#saveLoadBtns') ||
+                        e.target.closest('#symbolPicker');
 
   if (isInteractive) return;
 
@@ -628,18 +717,18 @@ window.addEventListener('mousemove', (e) => {
     let newTop = startTop;
 
     if (currentResizeCorner === 'handle-br') {
-      newWidth = Math.max(220, startWidth + deltaX);
+      newWidth = Math.max(240, startWidth + deltaX);
       newHeight = Math.max(250, startHeight + deltaY);
     } else if (currentResizeCorner === 'handle-bl') {
-      newWidth = Math.max(220, startWidth - deltaX);
+      newWidth = Math.max(240, startWidth - deltaX);
       newHeight = Math.max(250, startHeight + deltaY);
       newLeft = startLeft + (startWidth - newWidth);
     } else if (currentResizeCorner === 'handle-tr') {
-      newWidth = Math.max(220, startWidth + deltaX);
+      newWidth = Math.max(240, startWidth + deltaX);
       newHeight = Math.max(250, startHeight - deltaY);
       newTop = startTop + (startHeight - newHeight);
     } else if (currentResizeCorner === 'handle-tl') {
-      newWidth = Math.max(220, startWidth - deltaX);
+      newWidth = Math.max(240, startWidth - deltaX);
       newHeight = Math.max(250, startHeight - deltaY);
       newLeft = startLeft + (startWidth - newWidth);
       newTop = startTop + (startHeight - newHeight);
@@ -655,6 +744,11 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', () => {
   isDragging = false;
   currentResizeCorner = null;
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  noteTextInput.focus();
+  document.execCommand('fontSize', false, '1');
 });
 
 renderNotes();
