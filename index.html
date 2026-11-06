@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (可編輯)</title>
+<title>影片播放器 + 右側筆記 (客製化色彩與粗體)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -12,13 +12,11 @@
   }
   #videoPlayer {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; left: 0;
     width: 100vw;
     height: 100vh;
     object-fit: contain;
     background: black;
-    transform: scale(1.05) translateY(-6%);
-    transform-origin: center center;
     z-index: 0;
     display: block;
   }
@@ -28,156 +26,231 @@
   #notesContainer {
     position: fixed;
     top: 0;
-    left: calc(100vw - 400px);
-    width: 400px;
-    bottom: 60px;
-    background: rgba(255,255,255,0.9);
+    left: calc(100vw - 320px);
+    width: 320px;
+    height: calc(100vh - 40px);
+    background: rgba(255,255,255,0.92);
     color: #333;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 8px 12px;
     box-sizing: border-box;
     box-shadow: -3px 0 10px rgba(0,0,0,0.5);
     z-index: 10;
     overflow: hidden;
-    cursor: move;
-    user-select: none;
+    min-width: 220px;
+    min-height: 250px;
   }
+  
   #addNoteForm {
     display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 5px;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 3px;
   }
-  #addNoteForm input[type="text"] {
-    flex: 1;
-    padding: 6px 10px;
-    font-size: 14px;
+  .time-submit-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  #noteTime {
+    width: 75px;
+    padding: 2px 4px;
+    font-size: 11px;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    outline-offset: 2px;
+    border-radius: 3px;
+    outline-offset: 1px;
+    cursor: text;
+    user-select: text;
+    box-sizing: border-box;
+    text-align: center;
   }
-  #addNoteForm button {
-    padding: 6px 16px;
-    font-size: 14px;
-    background: #4CAF50;
+  #submitBtn {
+    flex: 1;
+    padding: 3px 6px;
+    font-size: 11px;
+    background: #0000FF; /* 換成指定深藍色 */
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+  }
+  #submitBtn:hover { background: #0000CC; }
+  #submitBtn.editing { background: #ffc107; color: #333; }
+  #submitBtn.editing:hover { background: #e0a800; }
+
+  /* 💡 新增粗體按鈕放在新增筆記右邊 */
+  #boldBtn {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    background: #666;
+    border: none;
+    border-radius: 3px;
     color: white;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.3s ease;
   }
-  #addNoteForm button:hover {
-    background: #45a049;
+  #boldBtn:hover { background: #444; }
+
+  #noteText {
+    width: 100%;
+    min-height: 40px;
+    max-height: 70px;
+    padding: 3px 6px;
+    font-size: 10.5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: white;
+    color: black;
+    overflow-y: auto;
+    box-sizing: border-box;
+    outline: none;
+    cursor: text;
+    user-select: text;
+    white-space: pre-wrap;
+    word-break: break-all;
   }
+  #noteText:empty:before {
+    content: attr(placeholder);
+    color: #999;
+  }
+
+  .color-btn-group {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+  }
+  .color-btn {
+    flex: 1;
+    padding: 1px 0;
+    font-size: 10px;
+    border: none;
+    border-radius: 2px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+  }
+  .color-btn:hover { opacity: 0.8; }
+
   #notes {
     flex: 1;
     overflow-y: auto;
-    font-size: 14px;
+    font-size: 10.5px;
     background: white;
     color: black;
-    border-radius: 4px;
-    padding: 5px;
+    border-radius: 3px;
+    padding: 3px;
+    user-select: text;
+    cursor: default;
   }
   #notes div.note {
     display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-    padding: 8px 0;
+    align-items: flex-start;
+    border-bottom: 1px solid #eee;
+    padding: 3px 0;
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
-  #notes div.note:hover {
-    background-color: #e8e8e8;
-  }
+  #notes div.note:hover { background-color: #f2f2f2; }
   #notes div.note .time {
     flex-shrink: 0;
-    width: 70px;
-    background-color: #ddd;
-    color: #666;
+    width: 46px;
+    background-color: #e9e9e9;
+    color: #555;
     text-align: center;
     font-weight: 600;
-    border-radius: 4px;
-    padding: 4px 8px;
-    margin-right: 10px;
+    font-size: 10px;
+    border-radius: 2px;
+    padding: 1px 2px;
+    margin-right: 4px;
   }
   #notes div.note .text {
     flex-grow: 1;
-    padding-right: 10px;
+    padding-right: 4px;
+    word-break: break-all;
+    white-space: pre-wrap; 
+    line-height: 1.3;
   }
   #notes div.note button.deleteBtn {
     background: transparent;
     border: none;
     cursor: pointer;
     flex-shrink: 0;
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     position: relative;
     opacity: 0.6;
     transition: opacity 0.2s ease;
+    margin-top: 1px;
   }
-  #notes div.note button.deleteBtn:hover {
-    opacity: 1;
-  }
+  #notes div.note button.deleteBtn:hover { opacity: 1; }
   #notes div.note button.deleteBtn::before, 
   #notes div.note button.deleteBtn::after {
     content: '';
     position: absolute;
-    left: 9px;
-    top: 4px;
+    left: 6px;
+    top: 2px;
     width: 2px;
-    height: 12px;
+    height: 9px;
     background-color: #d9534f;
   }
-  #notes div.note button.deleteBtn::before {
-    transform: rotate(45deg);
-  }
-  #notes div.note button.deleteBtn::after {
-    transform: rotate(-45deg);
-  }
+  #notes div.note button.deleteBtn::before { transform: rotate(45deg); }
+  #notes div.note button.deleteBtn::after { transform: rotate(-45deg); }
   #notes div.note button.editBtn {
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 14px;
-    color: #007bff;
+    font-size: 10px;
+    color: #0000FF; /* 編輯按鈕改為指定藍色 */
     opacity: 0.7;
     transition: opacity 0.2s ease;
-    margin-right: 6px;
+    margin-right: 2px;
+    margin-top: 1px;
   }
   #notes div.note button.editBtn:hover {
     opacity: 1;
     text-decoration: underline;
   }
+  
   #saveLoadBtns {
     margin-top: 6px;
+    margin-bottom: 4px;
     display: flex;
-    gap: 10px;
+    justify-content: center;
+    gap: 8px;
   }
   #saveBtn, #loadBtn {
-    flex: 1;
-    padding: 6px 10px;
-    font-size: 14px;
+    width: 42%;
+    padding: 3px 4px;
+    font-size: 10.5px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.3s ease;
     color: white;
   }
-  #saveBtn {
-    background-color: #007bff;
+  #saveBtn { background-color: #0000FF; } /* 儲存按鈕改為指定藍色 */
+  #saveBtn:hover { background-color: #0000CC; }
+  #loadBtn { background-color: #6c757d; }
+  #loadBtn:hover { background-color: #5a6268; }
+
+  .corner-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    z-index: 20;
   }
-  #saveBtn:hover {
-    background-color: #0069d9;
-  }
-  #loadBtn {
-    background-color: #6c757d;
-  }
-  #loadBtn:hover {
-    background-color: #5a6268;
-  }
+  #handle-tl { top: 0; left: 0; cursor: nwse-resize; }
+  #handle-tr { top: 0; right: 0; cursor: nesw-resize; }
+  #handle-bl { bottom: 0; left: 0; cursor: nesw-resize; }
+  #handle-br { bottom: 0; right: 0; cursor: nwse-resize; }
 </style>
 </head>
 <body tabindex="0">
@@ -186,12 +259,33 @@
 <video id="videoPlayer" autoplay controls></video>
 
 <div id="notesContainer">
+  <div class="corner-handle" id="handle-tl"></div>
+  <div class="corner-handle" id="handle-tr"></div>
+  <div class="corner-handle" id="handle-bl"></div>
+  <div class="corner-handle" id="handle-br"></div>
+
   <form id="addNoteForm">
-    <input type="text" id="noteTime" placeholder="時間 (秒/mm:ss/hh:mm:ss)" required />
-    <input type="text" id="noteText" placeholder="筆記內容" required />
-    <button type="submit">新增筆記</button>
+    <div class="time-submit-row">
+      <input type="text" id="noteTime" placeholder="時間" required />
+      <button type="submit" id="submitBtn">新增筆記</button>
+      <!-- 💡 新增粗體按鈕 -->
+      <button type="button" id="boldBtn" onclick="toggleBold()" title="粗體"><b>B</b></button>
+    </div>
+    
+    <div id="noteText" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
+    
+    <div class="color-btn-group">
+      <button type="button" class="color-btn" style="background-color: #333333;" onclick="changeTextColor('#333333')">黑</button>
+      <button type="button" class="color-btn" style="background-color: #0000FF;" onclick="changeTextColor('#0000FF')">藍</button>
+      <!-- 💡 綠色改為指定橘色 -->
+      <button type="button" class="color-btn" style="background-color: #E64A19;" onclick="changeTextColor('#E64A19')">橘</button>
+      <button type="button" class="color-btn" style="background-color: #6f42c1;" onclick="changeTextColor('#6f42c1')">紫</button>
+      <button type="button" class="color-btn" style="background-color: #dc3545;" onclick="changeTextColor('#dc3545')">紅</button>
+    </div>
   </form>
+
   <div id="notes"></div>
+
   <div id="saveLoadBtns">
     <button id="saveBtn" type="button" title="下載筆記">💾 下載筆記</button>
     <button id="loadBtn" type="button" title="載入筆記檔">📂 載入筆記</button>
@@ -206,12 +300,25 @@ const notesDiv = document.getElementById('notes');
 const addNoteForm = document.getElementById('addNoteForm');
 const noteTimeInput = document.getElementById('noteTime');
 const noteTextInput = document.getElementById('noteText');
+const submitBtn = document.getElementById('submitBtn');
 const saveBtn = document.getElementById('saveBtn');
 const loadBtn = document.getElementById('loadBtn');
 const loadNotesFile = document.getElementById('loadNotesFile');
 const notesContainer = document.getElementById('notesContainer');
 
 let notes = [];
+let editingIndex = null;
+
+function changeTextColor(color) {
+  noteTextInput.focus();
+  document.execCommand('foreColor', false, color);
+}
+
+// 💡 切換粗體功能
+function toggleBold() {
+  noteTextInput.focus();
+  document.execCommand('bold', false, null);
+}
 
 function renderNotes() {
   notesDiv.innerHTML = "";
@@ -232,19 +339,20 @@ function renderNotes() {
 
     const textDiv = document.createElement('div');
     textDiv.className = "text";
-    textDiv.textContent = note.text;
+    textDiv.innerHTML = note.text;
 
     const editBtn = document.createElement('button');
     editBtn.className = "editBtn";
-    editBtn.title = "編輯筆記";
+    editBtn.title = "修改筆記";
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
       e.stopPropagation();
-      const newText = prompt("修改筆記內容：", note.text);
-      if (newText !== null) {
-        notes[idx].text = newText.trim();
-        renderNotes();
-      }
+      noteTimeInput.value = formatTime(note.time);
+      noteTextInput.innerHTML = note.text;
+      editingIndex = idx;
+      submitBtn.textContent = "💾 儲存修改";
+      submitBtn.classList.add("editing");
+      noteTextInput.focus();
     };
 
     const delBtn = document.createElement('button');
@@ -254,6 +362,9 @@ function renderNotes() {
       e.stopPropagation();
       if(confirm("確定要刪除此筆記？")) {
         notes.splice(idx, 1);
+        if (editingIndex === idx) {
+          resetForm();
+        }
         renderNotes();
       }
     };
@@ -264,6 +375,14 @@ function renderNotes() {
     div.appendChild(delBtn);
     notesDiv.appendChild(div);
   });
+}
+
+function resetForm() {
+  editingIndex = null;
+  noteTimeInput.value = "";
+  noteTextInput.innerHTML = "";
+  submitBtn.textContent = "新增筆記";
+  submitBtn.classList.remove("editing");
 }
 
 function formatTime(sec) {
@@ -286,23 +405,43 @@ function parseTime(input) {
   return NaN;
 }
 
-addNoteForm.onsubmit = (e) => {
-  e.preventDefault();
+function handleFormSubmit() {
   const t = parseTime(noteTimeInput.value);
   if(isNaN(t) || t < 0 || t > video.duration) {
     alert("請輸入有效的時間 (秒/mm:ss/hh:mm:ss)，且不得超過影片長度");
     return;
   }
-  const text = noteTextInput.value.trim();
-  if(text.length === 0) {
+  const text = noteTextInput.innerHTML.trim();
+  if(text.length === 0 || text === "<br>") {
     alert("請輸入筆記內容");
     return;
   }
-  notes.push({time: t, text});
+
+  if (editingIndex !== null) {
+    notes[editingIndex] = {time: t, text};
+  } else {
+    notes.push({time: t, text});
+  }
+
   renderNotes();
-  noteTimeInput.value = "";
-  noteTextInput.value = "";
+  resetForm();
+}
+
+addNoteForm.onsubmit = (e) => {
+  e.preventDefault();
+  handleFormSubmit();
 };
+
+noteTextInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (e.shiftKey) {
+      return;
+    } else {
+      e.preventDefault();
+      handleFormSubmit();
+    }
+  }
+});
 
 saveBtn.onclick = () => {
   const dataStr = JSON.stringify(notes, null, 2);
@@ -350,11 +489,21 @@ input.addEventListener('change', e => {
 });
 
 window.addEventListener('keydown', e => {
+  const activeEl = document.activeElement;
+  
+  if (e.key === 'Escape') {
+    if (activeEl) activeEl.blur();
+    return;
+  }
+
+  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.id === 'noteText')) {
+    return;
+  }
+
   if(['ArrowLeft','ArrowRight',' ','f'].includes(e.key)) {
     e.preventDefault();
   }
-});
-window.addEventListener('keydown', e => {
+
   switch(e.key){
     case 'ArrowLeft':
       video.currentTime = Math.max(0, video.currentTime - 3);
@@ -373,24 +522,43 @@ window.addEventListener('keydown', e => {
   }
 });
 
-// ✨ 點影片自動填入目前時間到時間欄位
 video.addEventListener('click', () => {
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
   const current = Math.floor(video.currentTime);
   noteTimeInput.value = formatTime(current);
-  noteTextInput.focus();
 });
 
-// 拖動功能
 let isDragging = false;
-let dragStartX = 0;
-let dragStartY = 0;
-let startLeft = 0;
-let startTop = 0;
+let currentResizeCorner = null;
+let startX = 0, startY = 0;
+let startLeft = 0, startTop = 0;
+let startWidth = 0, startHeight = 0;
 
 notesContainer.addEventListener('mousedown', (e) => {
+  const isInteractive = e.target.closest('#addNoteForm') || 
+                        e.target.closest('#notes div.note') || 
+                        e.target.closest('#saveLoadBtns');
+
+  if (isInteractive) return;
+
+  if (e.target.classList.contains('corner-handle')) {
+    currentResizeCorner = e.target.id;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = notesContainer.offsetWidth;
+    startHeight = notesContainer.offsetHeight;
+    const style = window.getComputedStyle(notesContainer);
+    startLeft = parseInt(style.left, 10) || 0;
+    startTop = parseInt(style.top, 10) || 0;
+    e.preventDefault();
+    return;
+  }
+
   isDragging = true;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
+  startX = e.clientX;
+  startY = e.clientY;
   const style = window.getComputedStyle(notesContainer);
   startLeft = parseInt(style.left, 10) || 0;
   startTop = parseInt(style.top, 10) || 0;
@@ -398,15 +566,56 @@ notesContainer.addEventListener('mousedown', (e) => {
 });
 
 window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  const deltaX = e.clientX - dragStartX;
-  const deltaY = e.clientY - dragStartY;
-  notesContainer.style.left = (startLeft + deltaX) + 'px';
-  notesContainer.style.top = (startTop + deltaY) + 'px';
+  if (isDragging) {
+    let deltaX = e.clientX - startX;
+    let deltaY = e.clientY - startY;
+
+    let newLeft = startLeft + deltaX;
+    let newTop = startTop + deltaY;
+
+    const maxTop = window.innerHeight - notesContainer.offsetHeight;
+    newTop = Math.min(newTop, maxTop);
+
+    notesContainer.style.left = newLeft + 'px';
+    notesContainer.style.top = newTop + 'px';
+
+  } else if (currentResizeCorner) {
+    let deltaX = e.clientX - startX;
+    let deltaY = e.clientY - startY;
+
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newLeft = startLeft;
+    let newTop = startTop;
+
+    if (currentResizeCorner === 'handle-br') {
+      newWidth = Math.max(220, startWidth + deltaX);
+      newHeight = Math.max(250, startHeight + deltaY);
+    } else if (currentResizeCorner === 'handle-bl') {
+      newWidth = Math.max(220, startWidth - deltaX);
+      newHeight = Math.max(250, startHeight + deltaY);
+      newLeft = startLeft + (startWidth - newWidth);
+    } else if (currentResizeCorner === 'handle-tr') {
+      newWidth = Math.max(220, startWidth + deltaX);
+      newHeight = Math.max(250, startHeight - deltaY);
+      newTop = startTop + (startHeight - newHeight);
+    } else if (currentResizeCorner === 'handle-tl') {
+      newWidth = Math.max(220, startWidth - deltaX);
+      newHeight = Math.max(250, startHeight - deltaY);
+      newLeft = startLeft + (startWidth - newWidth);
+      newTop = startTop + (startHeight - newHeight);
+    }
+
+    notesContainer.style.width = newWidth + 'px';
+    notesContainer.style.height = newHeight + 'px';
+    notesContainer.style.left = newLeft + 'px';
+    notesContainer.style.top = newTop + 'px';
+  }
 });
 
 window.addEventListener('mouseup', () => {
   isDragging = false;
+  currentResizeCorner = null;
 });
 
 renderNotes();
