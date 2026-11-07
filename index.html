@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (懸停邏輯優化版)</title>
+<title>影片播放器 + 右側筆記 (懸停按鈕不收合修復版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -324,8 +324,9 @@
     line-height: 1.3;
   }
   
-  /* 💡 改進：只有當滑鼠移到筆記內容文字區(.text)時，才會展開完整內容 */
-  #notes div.note .text:hover {
+  /* 💡 修復重點：滑鼠移動到內文(.text)或是按鈕區(.note-actions)時，都保持展開狀態 */
+  #notes div.note .text:hover,
+  #notes div.note:has(.note-actions:hover) .text {
     overflow: visible;
     white-space: pre-wrap;
     word-break: break-all;
@@ -343,8 +344,8 @@
     gap: 2px;
     opacity: 0.3;
     transition: opacity 0.2s ease;
-    z-index: 3;
-    background: rgba(255,255,255,0.8);
+    z-index: 10; /* 提升按鈕層級，確保hover時順暢 */
+    background: rgba(255,255,255,0.9);
     padding: 1px;
     border-radius: 2px;
   }
