@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (預設極小字體)</title>
+<title>影片播放器 + 右側筆記 (工具列重新排列版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -377,31 +377,10 @@
   <div class="corner-handle" id="handle-br"></div>
 
   <form id="addNoteForm">
-    <!-- 第一行：時間與新增按鈕 -->
+    <!-- 第一行：時間、新增按鈕、字體大小、超連結 -->
     <div class="time-submit-row">
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
-    </div>
-
-    <!-- 第二行：顏色、超連結、符號、大小、粗體、自訂圖示列 -->
-    <div class="toolbar-row">
-      <!-- 文字顏色 -->
-      <div class="color-picker-wrapper">
-        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('textColorPalette', event)" title="文字顏色">A<span style="display:block; height:3px; background:#000; margin-top:1px;"></span></button>
-        <div id="textColorPalette" class="color-palette"></div>
-      </div>
-      <!-- 醒目顯示顏色 -->
-      <div class="color-picker-wrapper">
-        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
-        <div id="hiliteColorPalette" class="color-palette"></div>
-      </div>
-
-      <!-- 超連結 -->
-      <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
-
-      <!-- 符號 -->
-      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
-      <div id="symbolPicker"></div>
 
       <!-- 字體大小 -->
       <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
@@ -415,9 +394,12 @@
         <option value="7">最大 (7)</option>
       </select>
 
-      <!-- 粗體 -->
-      <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
+      <!-- 超連結 -->
+      <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
+    </div>
 
+    <!-- 第二行：申、選、符號、粗體、文字顏色、醒目顏色、§、⮕ -->
+    <div class="toolbar-row">
       <!-- 申圖示按鈕[cite: 8] -->
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
@@ -427,6 +409,31 @@
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
       </button>
+
+      <!-- 符號 -->
+      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
+      <div id="symbolPicker"></div>
+
+      <!-- 粗體 -->
+      <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
+
+      <!-- 文字顏色 -->
+      <div class="color-picker-wrapper">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('textColorPalette', event)" title="文字顏色">A<span style="display:block; height:3px; background:#000; margin-top:1px;"></span></button>
+        <div id="textColorPalette" class="color-palette"></div>
+      </div>
+
+      <!-- 醒目顯示顏色 -->
+      <div class="color-picker-wrapper">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
+        <div id="hiliteColorPalette" class="color-palette"></div>
+      </div>
+
+      <!-- 快捷符號 § -->
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('§')" title="插入 §">§</button>
+
+      <!-- 快捷符號 ⮕ -->
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⮕')" title="插入 ⮕">⮕</button>
     </div>
     
     <div id="noteText" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
@@ -476,6 +483,12 @@ function restoreSelection() {
     selection.removeAllRanges();
     selection.addRange(savedRange);
   }
+}
+
+function insertDirectSymbol(sym) {
+  restoreSelection();
+  noteTextInput.focus();
+  document.execCommand('insertText', false, sym);
 }
 
 function insertCustomImage(type) {
@@ -632,6 +645,7 @@ function toggleBold() {
 
 function changeFontSize(size) {
   if (!size) return;
+  restoreSelection();
   noteTextInput.focus();
   document.execCommand('fontSize', false, size);
 }
@@ -723,7 +737,7 @@ function resetForm() {
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
   noteTextInput.focus();
-  document.execCommand('fontSize', false, '1'); // 💡 確保重設表單時回到極小字體 (1)
+  document.execCommand('fontSize', false, '1');
 }
 
 function formatTime(sec) {
@@ -961,7 +975,6 @@ window.addEventListener('mouseup', () => {
   currentResizeCorner = null;
 });
 
-// 💡 頁面剛載入時，自動將輸入框設定為極小 (1)
 window.addEventListener('DOMContentLoaded', () => {
   noteTextInput.focus();
   document.execCommand('fontSize', false, '1');
