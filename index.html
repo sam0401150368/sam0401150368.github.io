@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (字體大小絕對修復版)</title>
+<title>影片播放器 + 右側筆記 (跳轉確認 + 快捷符號版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -135,7 +135,6 @@
     vertical-align: middle;
   }
 
-  /* 💡 改良版字體大小選單按鈕與下拉選單容器 */
   .font-size-wrapper {
     position: relative;
     display: inline-block;
@@ -416,7 +415,7 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
-      <!-- 💡 改良版字體大小下拉選單按鈕 -->
+      <!-- 字體大小下拉選單按鈕 -->
       <div class="font-size-wrapper">
         <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)">大小 ▾</button>
         <div id="fontSizeDropdown" class="font-size-dropdown">
@@ -434,7 +433,7 @@
       <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
     </div>
 
-    <!-- 第二行：申、選、符號、粗體、文字顏色、醒目顏色、§、⮕ -->
+    <!-- 第二行：申、選、符號、粗體、文字顏色、醒目顏色、§、⮕、⭕、❌ -->
     <div class="toolbar-row">
       <!-- 申圖示按鈕 -->
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
@@ -470,6 +469,12 @@
 
       <!-- 快捷符號 ⮕ -->
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⮕')" title="插入 ⮕">⮕</button>
+
+      <!-- 快捷符號 ⭕ -->
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⭕')" title="插入 ⭕">⭕</button>
+
+      <!-- 快捷符號 ❌ -->
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('❌')" title="插入 ❌">❌</button>
     </div>
     
     <div id="noteText" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
@@ -705,10 +710,14 @@ function renderNotes() {
     const div = document.createElement('div');
     div.className = "note";
 
+    /* 💡 增加誤觸防範：點擊筆記時彈出確認跳轉視窗 */
     div.onclick = (e) => {
       if (e.target.closest('.note-actions') || e.target.tagName === 'A') return;
-      video.currentTime = note.time;
-      video.play();
+      const confirmJump = confirm(`是否要跳轉至影片時間 [${formatTime(note.time)}] 並播放？`);
+      if (confirmJump) {
+        video.currentTime = note.time;
+        video.play();
+      }
     };
 
     const timeDiv = document.createElement('div');
@@ -785,7 +794,7 @@ function resetForm() {
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
   noteTextInput.focus();
-  document.execCommand('fontSize', false, '1'); // 確保重設時回到極小 (1)
+  document.execCommand('fontSize', false, '1');
 }
 
 function formatTime(sec) {
@@ -1024,7 +1033,6 @@ window.addEventListener('mouseup', () => {
   currentResizeCorner = null;
 });
 
-// 頁面載入時預設為極小字體 (1)
 window.addEventListener('DOMContentLoaded', () => {
   noteTextInput.focus();
   document.execCommand('fontSize', false, '1');
