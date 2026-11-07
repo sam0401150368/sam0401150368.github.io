@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (字體大小修復版)</title>
+<title>影片播放器 + 右側筆記 (字體大小徹底修復版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -382,8 +382,8 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
-      <!-- 字體大小選單 -->
-      <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
+      <!-- 字體大小選單 (加入 mousedown 保護與還原選取範圍) -->
+      <select id="fontSizeSelect" onmousedown="saveSelection(event)" onchange="restoreSelection(); changeFontSize(this.value); this.value='';">
         <option value="" disabled selected>大小</option>
         <option value="1">極小 (1)</option>
         <option value="2">小 (2)</option>
@@ -400,12 +400,12 @@
 
     <!-- 第二行：申、選、符號、粗體、文字顏色、醒目顏色、§、⮕ -->
     <div class="toolbar-row">
-      <!-- 申圖示按鈕[cite: 8] -->
+      <!-- 申圖示按鈕 -->
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
       </button>
 
-      <!-- 選圖示按鈕[cite: 9] -->
+      <!-- 選圖示按鈕 -->
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
       </button>
@@ -645,7 +645,6 @@ function toggleBold() {
 
 function changeFontSize(size) {
   if (!size) return;
-  restoreSelection();
   noteTextInput.focus();
   document.execCommand('fontSize', false, size);
 }
