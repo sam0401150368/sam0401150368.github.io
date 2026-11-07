@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (工具列重新排列版)</title>
+<title>影片播放器 + 右側筆記 (字體大小修復版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -382,7 +382,7 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
-      <!-- 字體大小 -->
+      <!-- 字體大小選單 -->
       <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
         <option value="" disabled selected>大小</option>
         <option value="1">極小 (1)</option>
@@ -410,7 +410,7 @@
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
       </button>
 
-      <!-- 符號 -->
+      <!-- 符號選單 -->
       <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
       <div id="symbolPicker"></div>
 
@@ -737,7 +737,7 @@ function resetForm() {
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
   noteTextInput.focus();
-  document.execCommand('fontSize', false, '1');
+  document.execCommand('fontSize', false, '1'); // 確保重設時回到極小 (1)
 }
 
 function formatTime(sec) {
@@ -975,6 +975,7 @@ window.addEventListener('mouseup', () => {
   currentResizeCorner = null;
 });
 
+// 頁面載入時預設為極小字體 (1)
 window.addEventListener('DOMContentLoaded', () => {
   noteTextInput.focus();
   document.execCommand('fontSize', false, '1');
