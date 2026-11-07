@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html class="notranslate" translate="no">
+<html>
 <head>
 <meta charset="utf-8" />
-<meta name="google" content="notranslate" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>影片播放器 + 右側筆記 (完美防翻譯干擾)</title>
+<title>影片播放器 + 右側筆記 (自訂彩虹色盤)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -57,7 +55,7 @@
     position: relative;
   }
   #noteTime {
-    width: 55px;
+    width: 60px;
     padding: 2px 4px;
     font-size: 11px;
     border: 1px solid #ccc;
@@ -70,7 +68,7 @@
   }
   #submitBtn {
     flex: 1;
-    padding: 3px 4px;
+    padding: 3px 6px;
     font-size: 11px;
     background: #0000FF;
     border: none;
@@ -85,8 +83,16 @@
   #submitBtn.editing { background: #ffc107; color: #333; }
   #submitBtn.editing:hover { background: #e0a800; }
 
-  #symbolBtn {
-    padding: 3px 5px;
+  .toolbar-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    position: relative;
+    margin: 2px 0;
+  }
+
+  .toolbar-btn {
+    padding: 2px 5px;
     font-size: 11px;
     background: #555;
     border: none;
@@ -96,13 +102,79 @@
     user-select: none;
     white-space: nowrap;
   }
-  #symbolBtn:hover { background: #333; }
+  .toolbar-btn:hover { background: #333; }
+
+  #boldBtn {
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    background: #666;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+  }
+  #boldBtn:hover { background: #444; }
+
+  #fontSizeSelect {
+    padding: 2px 2px;
+    font-size: 11px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+  }
+
+  .color-picker-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .doc-color-btn {
+    padding: 2px 5px;
+    font-size: 11px;
+    background: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.2;
+  }
+  .doc-color-btn:hover { background: #e9ecef; }
+
+  /* 💡 調整色盤寬度以容納新加入的彩虹色彩 */
+  .color-palette {
+    display: none;
+    position: absolute;
+    top: 26px;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-radius: 4px;
+    padding: 6px;
+    z-index: 100;
+    width: 140px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .palette-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    display: inline-block;
+  }
+  .palette-color:hover { transform: scale(1.15); border-color: #333; }
 
   #symbolPicker {
     display: none;
     position: absolute;
     top: 26px;
-    left: 80px;
+    left: 30px;
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -133,30 +205,6 @@
     border-color: #0000FF;
   }
 
-  #fontSizeSelect {
-    padding: 2px 2px;
-    font-size: 11px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background: white;
-    color: #333;
-    cursor: pointer;
-  }
-
-  #boldBtn {
-    padding: 3px 6px;
-    font-size: 11px;
-    font-weight: bold;
-    background: #666;
-    border: none;
-    border-radius: 3px;
-    color: white;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.3s ease;
-  }
-  #boldBtn:hover { background: #444; }
-
   #noteText {
     width: 100%;
     min-height: 40px;
@@ -181,24 +229,6 @@
     font-size: 10.5px;
   }
 
-  .color-btn-group {
-    display: flex;
-    gap: 2px;
-    width: 100%;
-  }
-  .color-btn {
-    flex: 1;
-    padding: 1px 0;
-    font-size: 10px;
-    border: none;
-    border-radius: 2px;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: opacity 0.2s;
-  }
-  .color-btn:hover { opacity: 0.8; }
-
   #notes {
     flex: 1;
     overflow-y: auto;
@@ -210,7 +240,9 @@
     user-select: text;
     cursor: default;
   }
+
   #notes div.note {
+    position: relative;
     display: flex;
     align-items: flex-start;
     border-bottom: 1px solid #eee;
@@ -219,6 +251,7 @@
     transition: background-color 0.2s ease;
   }
   #notes div.note:hover { background-color: #f2f2f2; }
+  
   #notes div.note .time {
     flex-shrink: 0;
     width: 46px;
@@ -230,11 +263,12 @@
     border-radius: 2px;
     padding: 1px 2px;
     margin-right: 4px;
+    z-index: 1;
   }
   
   #notes div.note .text {
     flex-grow: 1;
-    padding-right: 4px;
+    padding-right: 35px;
     white-space: pre; 
     overflow: hidden;
     line-height: 1.3;
@@ -244,51 +278,40 @@
     white-space: pre-wrap;
     word-break: break-all;
     background: #fff;
-    z-index: 5;
+    z-index: 2;
     position: relative;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
 
-  #notes div.note button.deleteBtn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    flex-shrink: 0;
-    width: 14px;
-    height: 14px;
-    position: relative;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
-    margin-top: 1px;
-  }
-  #notes div.note button.deleteBtn:hover { opacity: 1; }
-  #notes div.note button.deleteBtn::before, 
-  #notes div.note button.deleteBtn::after {
-    content: '';
+  .note-actions {
     position: absolute;
-    left: 6px;
+    right: 2px;
     top: 2px;
-    width: 2px;
-    height: 9px;
-    background-color: #d9534f;
+    display: flex;
+    gap: 2px;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+    z-index: 3;
+    background: rgba(255,255,255,0.8);
+    padding: 1px;
+    border-radius: 2px;
   }
-  #notes div.note button.deleteBtn::before { transform: rotate(45deg); }
-  #notes div.note button.deleteBtn::after { transform: rotate(-45deg); }
-  #notes div.note button.editBtn {
+  #notes div.note:hover .note-actions {
+    opacity: 1;
+  }
+
+  .note-action-btn {
     background: transparent;
     border: none;
     cursor: pointer;
     font-size: 10px;
-    color: #0000FF;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-    margin-right: 2px;
-    margin-top: 1px;
+    padding: 0 2px;
+    user-select: none;
   }
-  #notes div.note button.editBtn:hover {
-    opacity: 1;
-    text-decoration: underline;
-  }
+  .link-action-btn { color: #007bff; }
+  .edit-action-btn { color: #0000FF; }
+  .delete-action-btn { color: #d9534f; font-weight: bold; }
+  .note-action-btn:hover { text-decoration: underline; }
   
   #saveLoadBtns {
     margin-top: 6px;
@@ -325,27 +348,47 @@
   #handle-br { bottom: 0; right: 0; cursor: nwse-resize; }
 </style>
 </head>
-<body tabindex="0" class="notranslate" translate="no">
+<body tabindex="0">
 
 <input type="file" id="videoInput" accept="video/*" />
 <video id="videoPlayer" autoplay controls></video>
 
-<div id="notesContainer" class="notranslate" translate="no">
+<div id="notesContainer">
   <div class="corner-handle" id="handle-tl"></div>
   <div class="corner-handle" id="handle-tr"></div>
   <div class="corner-handle" id="handle-bl"></div>
   <div class="corner-handle" id="handle-br"></div>
 
   <form id="addNoteForm">
+    <!-- 第一行：時間與新增按鈕 -->
     <div class="time-submit-row">
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
-      
-      <button type="button" id="symbolBtn" onclick="toggleSymbolPicker(event)">★ 符號</button>
-      <div id="symbolPicker" class="notranslate" translate="no"></div>
+    </div>
 
-      <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
-        <option value="" disabled selected>字體大小</option>
+    <!-- 第二行：顏色、超連結、符號、大小、粗體整合列 -->
+    <div class="toolbar-row">
+      <!-- 文字顏色 -->
+      <div class="color-picker-wrapper">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('textColorPalette', event)" title="文字顏色">A<span style="display:block; height:3px; background:#000; margin-top:1px;"></span></button>
+        <div id="textColorPalette" class="color-palette"></div>
+      </div>
+      <!-- 醒目顯示顏色 -->
+      <div class="color-picker-wrapper">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
+        <div id="hiliteColorPalette" class="color-palette"></div>
+      </div>
+
+      <!-- 超連結 -->
+      <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
+
+      <!-- 符號 -->
+      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
+      <div id="symbolPicker"></div>
+
+      <!-- 字體大小 -->
+      <select id="fontSizeSelect" onmousedown="saveSelection(event)" onchange="restoreSelection(); changeFontSize(this.value); this.value='';">
+        <option value="" disabled selected>大小</option>
         <option value="1">極小 (1)</option>
         <option value="2">小 (2)</option>
         <option value="3">中 (3)</option>
@@ -355,21 +398,14 @@
         <option value="7">最大 (7)</option>
       </select>
 
-      <button type="button" id="boldBtn" onclick="toggleBold()" title="粗體"><b>B</b></button>
+      <!-- 粗體 -->
+      <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
     </div>
     
-    <div id="noteText" class="notranslate" translate="no" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
-    
-    <div class="color-btn-group">
-      <button type="button" class="color-btn" style="background-color: #333333;" onclick="changeTextColor('#333333')">黑</button>
-      <button type="button" class="color-btn" style="background-color: #0000FF;" onclick="changeTextColor('#0000FF')">藍</button>
-      <button type="button" class="color-btn" style="background-color: #E64A19;" onclick="changeTextColor('#E64A19')">橘</button>
-      <button type="button" class="color-btn" style="background-color: #6f42c1;" onclick="changeTextColor('#6f42c1')">紫</button>
-      <button type="button" class="color-btn" style="background-color: #dc3545;" onclick="changeTextColor('#dc3545')">紅</button>
-    </div>
+    <div id="noteText" contenteditable="true" placeholder="筆記內容 (Enter新增，Shift+Enter換行)"></div>
   </form>
 
-  <div id="notes" class="notranslate" translate="no"></div>
+  <div id="notes"></div>
 
   <div id="saveLoadBtns">
     <button id="saveBtn" type="button" title="下載筆記">💾 下載筆記</button>
@@ -394,16 +430,83 @@ const symbolPicker = document.getElementById('symbolPicker');
 
 let notes = [];
 let editingIndex = null;
+let savedRange = null;
+
+function saveSelection(e) {
+  e.preventDefault();
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    if (noteTextInput.contains(range.commonAncestorContainer)) {
+      savedRange = range;
+    }
+  }
+}
+
+function restoreSelection() {
+  if (savedRange) {
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+  }
+}
+
+/* 💡 更新後的色彩清單：深紅、紅、橘、黃、綠、青、淺藍、藍、紫、桃紅、黑、白 */
+const colorList = [
+  '#8B0000', '#FF0000', '#FFA500', '#FFFF00', '#00FF00', 
+  '#00FFFF', '#4169E1', '#0000FF', '#8A2BE2', '#FF00FF', 
+  '#000000', '#FFFFFF'
+];
+
+const textColorPalette = document.getElementById('textColorPalette');
+colorList.forEach(c => {
+  const span = document.createElement('span');
+  span.className = 'palette-color';
+  span.style.backgroundColor = c;
+  span.onmousedown = (e) => e.preventDefault();
+  span.onclick = (e) => {
+    e.stopPropagation();
+    restoreSelection();
+    changeTextColor(c);
+    textColorPalette.style.display = 'none';
+  };
+  textColorPalette.appendChild(span);
+});
+
+const hiliteColorPalette = document.getElementById('hiliteColorPalette');
+colorList.forEach(c => {
+  const span = document.createElement('span');
+  span.className = 'palette-color';
+  span.style.backgroundColor = c;
+  span.onmousedown = (e) => e.preventDefault();
+  span.onclick = (e) => {
+    e.stopPropagation();
+    restoreSelection();
+    changeHiliteColor(c);
+    hiliteColorPalette.style.display = 'none';
+  };
+  hiliteColorPalette.appendChild(span);
+});
+
+function togglePalette(paletteId, e) {
+  e.stopPropagation();
+  const palette = document.getElementById(paletteId);
+  const isShow = palette.style.display === 'flex';
+  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
+  symbolPicker.style.display = 'none';
+  palette.style.display = isShow ? 'none' : 'flex';
+}
 
 const symbols = ['⮕', '【', '】', '｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
 
 symbols.forEach(sym => {
   const span = document.createElement('span');
-  span.className = 'symbol-item notranslate';
-  span.setAttribute('translate', 'no');
+  span.className = 'symbol-item';
   span.textContent = sym;
+  span.onmousedown = (e) => e.preventDefault();
   span.onclick = (e) => {
     e.stopPropagation();
+    restoreSelection();
     insertSymbol(sym);
     symbolPicker.style.display = 'none';
   };
@@ -413,6 +516,7 @@ symbols.forEach(sym => {
 function toggleSymbolPicker(e) {
   e.stopPropagation();
   const isShow = symbolPicker.style.display === 'flex';
+  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
   symbolPicker.style.display = isShow ? 'none' : 'flex';
 }
 
@@ -421,8 +525,38 @@ function insertSymbol(sym) {
   document.execCommand('insertText', false, sym);
 }
 
+function insertLink() {
+  restoreSelection();
+  const url = prompt("請輸入超連結網址 (例如 https://example.com):");
+  if (!url) return;
+  noteTextInput.focus();
+  
+  const a = document.createElement('a');
+  a.href = url.startsWith('http') ? url : 'https://' + url;
+  a.target = '_blank';
+  a.textContent = '🔗';
+  a.title = a.href;
+  a.style.color = '#007bff';
+  a.style.textDecoration = 'underline';
+  a.style.cursor = 'pointer';
+
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(a);
+    range.setStartAfter(a);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    noteTextInput.appendChild(a);
+  }
+}
+
 document.addEventListener('click', () => {
   symbolPicker.style.display = 'none';
+  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
 });
 
 function changeTextColor(color) {
@@ -430,13 +564,20 @@ function changeTextColor(color) {
   document.execCommand('foreColor', false, color);
 }
 
+function changeHiliteColor(color) {
+  noteTextInput.focus();
+  document.execCommand('hiliteColor', false, color);
+}
+
 function toggleBold() {
+  restoreSelection();
   noteTextInput.focus();
   document.execCommand('bold', false, null);
 }
 
 function changeFontSize(size) {
   if (!size) return;
+  restoreSelection();
   noteTextInput.focus();
   document.execCommand('fontSize', false, size);
 }
@@ -446,29 +587,44 @@ function renderNotes() {
   notes.sort((a,b) => a.time - b.time);
   notes.forEach((note, idx) => {
     const div = document.createElement('div');
-    div.className = "note notranslate";
-    div.setAttribute('translate', 'no');
+    div.className = "note";
 
     div.onclick = (e) => {
-      if (e.target.classList.contains('deleteBtn') || e.target.classList.contains('editBtn')) return;
+      if (e.target.closest('.note-actions') || e.target.tagName === 'A') return;
       video.currentTime = note.time;
       video.play();
     };
 
     const timeDiv = document.createElement('div');
-    timeDiv.className = "time notranslate";
-    timeDiv.setAttribute('translate', 'no');
+    timeDiv.className = "time";
     timeDiv.textContent = formatTime(note.time);
 
     const textDiv = document.createElement('div');
-    textDiv.className = "text notranslate";
-    textDiv.setAttribute('translate', 'no');
+    textDiv.className = "text";
     textDiv.innerHTML = note.text;
     textDiv.title = note.text.replace(/<[^>]*>/g, '');
 
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = "note-actions";
+
+    const tempDom = document.createElement('div');
+    tempDom.innerHTML = note.text;
+    const firstLink = tempDom.querySelector('a');
+
+    if (firstLink) {
+      const linkBtn = document.createElement('button');
+      linkBtn.className = "note-action-btn link-action-btn";
+      linkBtn.title = "開啟網址: " + firstLink.href;
+      linkBtn.textContent = "🔗";
+      linkBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.open(firstLink.href, '_blank');
+      };
+      actionsDiv.appendChild(linkBtn);
+    }
+
     const editBtn = document.createElement('button');
-    editBtn.className = "editBtn notranslate";
-    editBtn.setAttribute('translate', 'no');
+    editBtn.className = "note-action-btn edit-action-btn";
     editBtn.title = "修改筆記";
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
@@ -482,9 +638,9 @@ function renderNotes() {
     };
 
     const delBtn = document.createElement('button');
-    delBtn.className = "deleteBtn notranslate";
-    delBtn.setAttribute('translate', 'no');
+    delBtn.className = "note-action-btn delete-action-btn";
     delBtn.title = "刪除筆記";
+    delBtn.textContent = "✖";
     delBtn.onclick = (e) => {
       e.stopPropagation();
       if(confirm("確定要刪除此筆記？")) {
@@ -496,10 +652,12 @@ function renderNotes() {
       }
     };
 
+    actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(delBtn);
+
     div.appendChild(timeDiv);
     div.appendChild(textDiv);
-    div.appendChild(editBtn);
-    div.appendChild(delBtn);
+    div.appendChild(actionsDiv);
     notesDiv.appendChild(div);
   });
 }
@@ -668,7 +826,8 @@ notesContainer.addEventListener('mousedown', (e) => {
   const isInteractive = e.target.closest('#addNoteForm') || 
                         e.target.closest('#notes div.note') || 
                         e.target.closest('#saveLoadBtns') ||
-                        e.target.closest('#symbolPicker');
+                        e.target.closest('#symbolPicker') ||
+                        e.target.closest('.color-palette');
 
   if (isInteractive) return;
 
