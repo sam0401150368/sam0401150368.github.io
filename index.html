@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (新增圖示與修復字體大小)</title>
+<title>影片播放器 + 右側筆記 (預設極小字體)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -117,7 +117,6 @@
   }
   #boldBtn:hover { background: #444; }
 
-  /* 💡 自訂圖示按鈕樣式 (配合預設字體大小) */
   .custom-icon-btn {
     padding: 1px 3px;
     background: #f8f9fa;
@@ -404,7 +403,7 @@
       <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
       <div id="symbolPicker"></div>
 
-      <!-- 字體大小 (修復點擊後選單失效問題) -->
+      <!-- 字體大小 -->
       <select id="fontSizeSelect" onchange="changeFontSize(this.value); this.value='';">
         <option value="" disabled selected>大小</option>
         <option value="1">極小 (1)</option>
@@ -419,13 +418,13 @@
       <!-- 粗體 -->
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
 
-      <!-- 💡 申圖示按鈕 (粗體右邊)[cite: 8] -->
-      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('https://i.imgur.com/8Qj8j8j.png')" title="插入申圖示">
+      <!-- 申圖示按鈕[cite: 8] -->
+      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
       </button>
 
-      <!-- 💡 選圖示按鈕[cite: 9] -->
-      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('https://i.imgur.com/7Qk7k7k.png')" title="插入選圖示">
+      <!-- 選圖示按鈕[cite: 9] -->
+      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
       </button>
     </div>
@@ -479,14 +478,12 @@ function restoreSelection() {
   }
 }
 
-/* 💡 插入自訂圖示到筆記游標處 */
-function insertCustomImage(svgDataUri) {
+function insertCustomImage(type) {
   restoreSelection();
   noteTextInput.focus();
   
   const img = document.createElement('img');
-  // 透過 SVG 程式碼直接產生高品質圖示，大小與預設字體相符
-  if (svgDataUri.includes('申')) {
+  if (type === 'shen') {
     img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>";
   } else {
     img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>";
@@ -725,7 +722,8 @@ function resetForm() {
   noteTextInput.innerHTML = "";
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
-  document.execCommand('fontSize', false, '1');
+  noteTextInput.focus();
+  document.execCommand('fontSize', false, '1'); // 💡 確保重設表單時回到極小字體 (1)
 }
 
 function formatTime(sec) {
@@ -963,6 +961,7 @@ window.addEventListener('mouseup', () => {
   currentResizeCorner = null;
 });
 
+// 💡 頁面剛載入時，自動將輸入框設定為極小 (1)
 window.addEventListener('DOMContentLoaded', () => {
   noteTextInput.focus();
   document.execCommand('fontSize', false, '1');
