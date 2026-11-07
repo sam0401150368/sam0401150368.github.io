@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (字體大小徹底修復版)</title>
+<title>影片播放器 + 右側筆記 (字體大小絕對修復版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -135,14 +135,48 @@
     vertical-align: middle;
   }
 
-  #fontSizeSelect {
-    padding: 2px 2px;
+  /* 💡 改良版字體大小選單按鈕與下拉選單容器 */
+  .font-size-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .font-size-btn {
+    padding: 2px 6px;
     font-size: 11px;
+    background: #f8f9fa;
     border: 1px solid #ccc;
     border-radius: 3px;
-    background: white;
+    cursor: pointer;
+    color: #333;
+    font-weight: bold;
+    user-select: none;
+  }
+  .font-size-btn:hover { background: #e9ecef; }
+
+  .font-size-dropdown {
+    display: none;
+    position: absolute;
+    top: 26px;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-radius: 4px;
+    padding: 3px 0;
+    z-index: 100;
+    width: 85px;
+  }
+  .font-size-item {
+    padding: 4px 8px;
+    font-size: 11px;
     color: #333;
     cursor: pointer;
+    text-align: left;
+    user-select: none;
+  }
+  .font-size-item:hover {
+    background: #0000FF;
+    color: #fff;
   }
 
   .color-picker-wrapper {
@@ -382,17 +416,19 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
-      <!-- 字體大小選單 (加入 mousedown 保護與還原選取範圍) -->
-      <select id="fontSizeSelect" onmousedown="saveSelection(event)" onchange="restoreSelection(); changeFontSize(this.value); this.value='';">
-        <option value="" disabled selected>大小</option>
-        <option value="1">極小 (1)</option>
-        <option value="2">小 (2)</option>
-        <option value="3">中 (3)</option>
-        <option value="4">稍大 (4)</option>
-        <option value="5">大 (5)</option>
-        <option value="6">特大 (6)</option>
-        <option value="7">最大 (7)</option>
-      </select>
+      <!-- 💡 改良版字體大小下拉選單按鈕 -->
+      <div class="font-size-wrapper">
+        <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)">大小 ▾</button>
+        <div id="fontSizeDropdown" class="font-size-dropdown">
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('1')">極小 (1)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('2')">小 (2)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('3')">中 (3)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('4')">稍大 (4)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('5')">大 (5)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('6')">特大 (6)</div>
+          <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('7')">最大 (7)</div>
+        </div>
+      </div>
 
       <!-- 超連結 -->
       <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
@@ -461,6 +497,7 @@ const loadBtn = document.getElementById('loadBtn');
 const loadNotesFile = document.getElementById('loadNotesFile');
 const notesContainer = document.getElementById('notesContainer');
 const symbolPicker = document.getElementById('symbolPicker');
+const fontSizeDropdown = document.getElementById('fontSizeDropdown');
 
 let notes = [];
 let editingIndex = null;
@@ -483,6 +520,26 @@ function restoreSelection() {
     selection.removeAllRanges();
     selection.addRange(savedRange);
   }
+}
+
+function toggleFontSizeDropdown(e) {
+  e.stopPropagation();
+  const isShow = fontSizeDropdown.style.display === 'block';
+  closeAllPopups();
+  fontSizeDropdown.style.display = isShow ? 'none' : 'block';
+}
+
+function applyFontSize(size) {
+  restoreSelection();
+  noteTextInput.focus();
+  document.execCommand('fontSize', false, size);
+  fontSizeDropdown.style.display = 'none';
+}
+
+function closeAllPopups() {
+  fontSizeDropdown.style.display = 'none';
+  symbolPicker.style.display = 'none';
+  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
 }
 
 function insertDirectSymbol(sym) {
@@ -560,8 +617,7 @@ function togglePalette(paletteId, e) {
   e.stopPropagation();
   const palette = document.getElementById(paletteId);
   const isShow = palette.style.display === 'flex';
-  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
-  symbolPicker.style.display = 'none';
+  closeAllPopups();
   palette.style.display = isShow ? 'none' : 'flex';
 }
 
@@ -584,7 +640,7 @@ symbols.forEach(sym => {
 function toggleSymbolPicker(e) {
   e.stopPropagation();
   const isShow = symbolPicker.style.display === 'flex';
-  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
+  closeAllPopups();
   symbolPicker.style.display = isShow ? 'none' : 'flex';
 }
 
@@ -623,8 +679,7 @@ function insertLink() {
 }
 
 document.addEventListener('click', () => {
-  symbolPicker.style.display = 'none';
-  document.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
+  closeAllPopups();
 });
 
 function changeTextColor(color) {
@@ -641,12 +696,6 @@ function toggleBold() {
   restoreSelection();
   noteTextInput.focus();
   document.execCommand('bold', false, null);
-}
-
-function changeFontSize(size) {
-  if (!size) return;
-  noteTextInput.focus();
-  document.execCommand('fontSize', false, size);
 }
 
 function renderNotes() {
@@ -895,6 +944,7 @@ notesContainer.addEventListener('mousedown', (e) => {
                         e.target.closest('#notes div.note') || 
                         e.target.closest('#saveLoadBtns') ||
                         e.target.closest('#symbolPicker') ||
+                        e.target.closest('.font-size-dropdown') ||
                         e.target.closest('.color-palette');
 
   if (isInteractive) return;
