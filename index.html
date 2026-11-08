@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (絕對穩定的圖片縮放版)</title>
+<title>影片播放器 + 右側筆記 (快捷顏色排與Google風格粗體)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -89,6 +89,7 @@
     align-items: center;
     position: relative;
     margin: 2px 0;
+    flex-wrap: wrap;
   }
 
   .toolbar-btn {
@@ -104,6 +105,7 @@
   }
   .toolbar-btn:hover { background: #333; }
 
+  /* Google 風格粗體按鈕 */
   #boldBtn {
     padding: 2px 6px;
     font-size: 11px;
@@ -114,8 +116,15 @@
     color: white;
     cursor: pointer;
     user-select: none;
+    transition: all 0.15s ease;
   }
   #boldBtn:hover { background: #444; }
+  #boldBtn.active {
+    background: #cce0ff;
+    color: #004085;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    border: 1px solid #b8daff;
+  }
 
   .custom-icon-btn {
     padding: 1px 3px;
@@ -177,6 +186,28 @@
     background: #0000FF;
     color: #fff;
   }
+
+  /* 常用顏色快捷按鈕列 */
+  .color-quick-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    background: #f1f3f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    margin: 2px 0;
+  }
+  .color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #bbb;
+    display: inline-block;
+    transition: transform 0.1s ease;
+  }
+  .color-dot:hover { transform: scale(1.25); border-color: #333; }
 
   .color-picker-wrapper {
     position: relative;
@@ -315,7 +346,6 @@
   }
   #notes div.note:hover { background-color: #f2f2f2; }
   
-  /* 左側時間與控制按鈕群組容器 */
   #notes div.note .left-col {
     flex-shrink: 0;
     width: 46px;
@@ -407,7 +437,6 @@
     transform-origin: top left;
   }
 
-  /* 右上角筆記功能按鈕群組 */
   .note-actions {
     position: absolute;
     right: 2px;
@@ -514,7 +543,6 @@
 <input type="file" id="videoInput" accept="video/*" />
 <video id="videoPlayer" autoplay controls></video>
 
-<!-- 圖片點擊放大與抓手拖曳全螢幕燈箱 Modal -->
 <div id="imageModal" onclick="closeImageModal()">
   <img id="modalImg" src="" alt="預覽大圖" onclick="event.stopPropagation()" />
 </div>
@@ -548,9 +576,7 @@
     </div>
 
     <div class="toolbar-row">
-      <!-- ↩️ 復原 (Undo) 按鈕 -->
       <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleUndo()" title="復原 (Undo)">↩️</button>
-      <!-- ↪️ 取消復原 (Redo) 按鈕 -->
       <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleRedo()" title="取消復原 (Redo)">↪️</button>
 
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
@@ -564,12 +590,8 @@
       <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
       <div id="symbolPicker"></div>
 
+      <!-- Google風格粗體按鈕 -->
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
-
-      <div class="color-picker-wrapper">
-        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('textColorPalette', event)" title="文字顏色">A<span style="display:block; height:3px; background:#000; margin-top:1px;"></span></button>
-        <div id="textColorPalette" class="color-palette"></div>
-      </div>
 
       <div class="color-picker-wrapper">
         <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
@@ -580,6 +602,21 @@
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⮕')" title="插入 ⮕">⮕</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⭕')" title="插入 ⭕">⭕</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('❌')" title="插入 ❌">❌</button>
+    </div>
+
+    <!-- 💡 新增的顏色快捷列 (黑、紅、紫、藍、橘、咖、其他) -->
+    <div class="color-quick-row">
+      <span style="font-size:10px; color:#555; font-weight:bold; margin-right:2px;">顏色:</span>
+      <span class="color-dot" style="background:#000000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#000000')" title="黑色"></span>
+      <span class="color-dot" style="background:#FF0000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF0000')" title="紅色"></span>
+      <span class="color-dot" style="background:#8A2BE2;" onmousedown="saveSelection(event)" onclick="changeTextColor('#8A2BE2')" title="紫色"></span>
+      <span class="color-dot" style="background:#0000FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#0000FF')" title="藍色"></span>
+      <span class="color-dot" style="background:#FFA500;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FFA500')" title="橘色"></span>
+      <span class="color-dot" style="background:#8B4513;" onmousedown="saveSelection(event)" onclick="changeTextColor('#8B4513')" title="咖啡色"></span>
+      <span class="color-dot" style="background:#00FF00;" onmousedown="saveSelection(event)" onclick="changeTextColor('#00FF00')" title="綠色"></span>
+      <span class="color-dot" style="background:#00FFFF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#00FFFF')" title="青色"></span>
+      <span class="color-dot" style="background:#FF00FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF00FF')" title="粉紅"></span>
+      <span class="color-dot" style="background:#808080;" onmousedown="saveSelection(event)" onclick="changeTextColor('#808080')" title="灰色"></span>
     </div>
     
     <div id="noteText" contenteditable="true" placeholder="筆記內容 (可點 📷 插入圖片)"></div>
@@ -608,6 +645,7 @@ const loadNotesFile = document.getElementById('loadNotesFile');
 const notesContainer = document.getElementById('notesContainer');
 const symbolPicker = document.getElementById('symbolPicker');
 const fontSizeDropdown = document.getElementById('fontSizeDropdown');
+const boldBtn = document.getElementById('boldBtn');
 
 const imageModal = document.getElementById('imageModal');
 const modalImg = document.getElementById('modalImg');
@@ -818,21 +856,6 @@ const colorList = [
   '#000000', '#FFFFFF'
 ];
 
-const textColorPalette = document.getElementById('textColorPalette');
-colorList.forEach(c => {
-  const span = document.createElement('span');
-  span.className = 'palette-color';
-  span.style.backgroundColor = c;
-  span.onmousedown = (e) => e.preventDefault();
-  span.onclick = (e) => {
-    e.stopPropagation();
-    restoreSelection();
-    changeTextColor(c);
-    textColorPalette.style.display = 'none';
-  };
-  textColorPalette.appendChild(span);
-});
-
 const hiliteColorPalette = document.getElementById('hiliteColorPalette');
 colorList.forEach(c => {
   const span = document.createElement('span');
@@ -920,6 +943,7 @@ document.addEventListener('click', () => {
 function changeTextColor(color) {
   noteTextInput.focus();
   document.execCommand('foreColor', false, color);
+  updateBoldButtonState();
 }
 
 function changeHiliteColor(color) {
@@ -931,7 +955,24 @@ function toggleBold() {
   restoreSelection();
   noteTextInput.focus();
   document.execCommand('bold', false, null);
+  updateBoldButtonState();
 }
+
+/* 💡 即時偵測游標位置，更新 Google 風格的粗體按鈕狀態 */
+function updateBoldButtonState() {
+  try {
+    const isBold = document.queryCommandState('bold');
+    if (isBold) {
+      boldBtn.classList.add('active');
+    } else {
+      boldBtn.classList.remove('active');
+    }
+  } catch(e) {}
+}
+
+noteTextInput.addEventListener('keyup', updateBoldButtonState);
+noteTextInput.addEventListener('mouseup', updateBoldButtonState);
+noteTextInput.addEventListener('focus', updateBoldButtonState);
 
 /* 全螢幕大圖燈箱 Modal */
 function openImageModal(url) {
@@ -1063,6 +1104,13 @@ function createImgContainer(url) {
   const img = document.createElement('img');
   img.src = url;
 
+  let currentScale = 1;
+  wrapper.dataset.zoom = 1;
+  wrapper.zoomImage = (delta) => {
+    currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
+    img.style.transform = `scale(${currentScale})`;
+  };
+
   imgWrapper.appendChild(img);
   wrapper.appendChild(imgWrapper);
 
@@ -1130,6 +1178,7 @@ function renderNotes() {
       submitBtn.textContent = "💾 儲存修改";
       submitBtn.classList.add("editing");
       noteTextInput.focus();
+      updateBoldButtonState();
     };
 
     const delBtn = document.createElement('button');
@@ -1167,7 +1216,6 @@ function renderNotes() {
       const zoomControls = document.createElement('div');
       zoomControls.className = 'img-zoom-controls';
 
-      /* 💡 修正：直接透過 DOM 讀取與修改圖片的 scale 縮放比例，百分之百生效 */
       const zoomInBtn = document.createElement('button');
       zoomInBtn.className = 'zoom-btn';
       zoomInBtn.textContent = '+';
@@ -1225,6 +1273,7 @@ function resetForm() {
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
   noteTextInput.focus();
+  updateBoldButtonState();
 }
 
 function formatTime(sec) {
