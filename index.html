@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (完美按鈕定位與縮放版)</title>
+<title>影片播放器 + 右側筆記 (排除申選圖示排版版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -337,6 +337,16 @@
     line-height: 1.3;
   }
   
+  /* 申與選專用行內 SVG 圖示樣式 (不影響排版) */
+  img.custom-icon-img {
+    width: 14px !important;
+    height: 14px !important;
+    vertical-align: middle !important;
+    margin: 0 1px !important;
+    display: inline-block !important;
+    max-height: 14px !important;
+  }
+
   /* 下方筆記區圖片縮放與限高 */
   .note-img-wrapper {
     position: relative;
@@ -626,15 +636,12 @@ function insertCustomImage(type) {
   noteTextInput.focus();
   
   const img = document.createElement('img');
+  img.className = 'custom-icon-img';
   if (type === 'shen') {
     img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>";
   } else {
     img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>";
   }
-  img.style.width = '14px';
-  img.style.height = '14px';
-  img.style.verticalAlign = 'middle';
-  img.style.margin = '0 1px';
 
   const selection = window.getSelection();
   if (selection.rangeCount > 0) {
@@ -814,11 +821,12 @@ function toggleBold() {
   document.execCommand('bold', false, null);
 }
 
-/* 渲染下方筆記區：建立圖片與超連結（放在修改按鈕左邊）與放大縮小控制器 */
+/* 渲染下方筆記區：智慧判斷並排除申/選 SVG 行內小圖示 */
 function parseImageUrls(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
+  // 1. 轉譯圖片 Badge
   div.querySelectorAll('.img-badge').forEach(el => {
     const imgUrl = el.getAttribute('data-img-url');
     if (imgUrl) {
@@ -827,14 +835,19 @@ function parseImageUrls(html) {
     }
   });
 
+  // 2. 轉譯實體 img 標籤（嚴格排除申、選這類 SVG 圖示）
   div.querySelectorAll('img').forEach(img => {
-    if (!img.closest('.note-img-wrapper') && !img.classList.contains('custom-icon-btn')) {
+    const isSvgIcon = img.src.startsWith('data:image/svg+xml') || img.classList.contains('custom-icon-img');
+    if (!isSvgIcon && !img.closest('.note-img-wrapper') && !img.closest('.custom-icon-btn')) {
       const imgUrl = formatImageUrl(img.src);
       const container = createImgContainer(imgUrl);
       img.parentNode.replaceChild(container, img);
+    } else if (isSvgIcon) {
+      img.classList.add('custom-icon-img');
     }
   });
 
+  // 3. 純文字連結自動解析
   function walk(node) {
     if (node.nodeType === Node.TEXT_NODE) {
       let text = node.nodeValue;
@@ -895,7 +908,6 @@ function createImgContainer(url) {
 
   let currentScale = 1;
 
-  // 儲存縮放比例供外部控制器使用
   wrapper.dataset.zoom = 1;
   wrapper.zoomImage = (delta) => {
     currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
@@ -984,24 +996,20 @@ function renderNotes() {
     actionsDiv.appendChild(editBtn);
     actionsDiv.appendChild(delBtn);
 
-    // 如果筆記內含有圖片，自動在右上角加入 🔗（放修改按鈕左邊）與 +/- 放大縮小按鈕（放下方）
-    const hasImages = textDiv.querySelectorAll('.note-img-wrapper').length > 0;
-    if (hasImages) {
-      // 1. 圖片專屬超連結按鈕（放在修改按鈕左邊）
-      const firstImgWrapper = textDiv.querySelector('.note-img-wrapper img');
-      if (firstImgWrapper) {
-        const imgLinkBtn = document.createElement('button');
-        imgLinkBtn.className = "note-action-btn img-link-btn";
-        imgLinkBtn.title = "在新視窗檢視原圖";
-        imgLinkBtn.textContent = "🔗";
-        imgLinkBtn.onclick = (e) => {
-          e.stopPropagation();
-          window.open(firstImgWrapper.src, '_blank');
-        };
-        actionsDiv.insertBefore(imgLinkBtn, editBtn);
-      }
+    // 只在包含大圖片時建立放大/縮小與連結按鈕（自動忽略申/選小圖示）
+    const realImages = Array.from(textDiv.querySelectorAll('.note-img-wrapper img')).filter(img => !img.classList.contains('custom-icon-img'));
+    if (realImages.length > 0) {
+      const firstImg = realImages[0];
+      const imgLinkBtn = document.createElement('button');
+      imgLinkBtn.className = "note-action-btn img-link-btn";
+      imgLinkBtn.title = "在新視窗檢視原圖";
+      imgLinkBtn.textContent = "🔗";
+      imgLinkBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.open(firstImg.src, '_blank');
+      };
+      actionsDiv.insertBefore(imgLinkBtn, editBtn);
 
-      // 2. 放大縮小控制器（放在修改、刪除按鈕的正下方）
       const zoomControls = document.createElement('div');
       zoomControls.className = 'img-zoom-controls';
 
@@ -1011,8 +1019,7 @@ function renderNotes() {
       zoomInBtn.title = '放大圖片';
       zoomInBtn.onclick = (e) => {
         e.stopPropagation();
-        textDiv.querySelectorAll('div[style*="margin"] > div.note-img-wrapper').forEach(wrapper => {
-          const img = wrapper.querySelector('img');
+        realImages.forEach(img => {
           let current = parseFloat(img.dataset.scale || '1');
           current = Math.min(3, current + 0.25);
           img.dataset.scale = current;
@@ -1026,8 +1033,7 @@ function renderNotes() {
       zoomOutBtn.title = '縮小圖片';
       zoomOutBtn.onclick = (e) => {
         e.stopPropagation();
-        textDiv.querySelectorAll('div[style*="margin"] > div.note-img-wrapper').forEach(wrapper => {
-          const img = wrapper.querySelector('img');
+        realImages.forEach(img => {
           let current = parseFloat(img.dataset.scale || '1');
           current = Math.max(0.5, current - 0.25);
           img.dataset.scale = current;
