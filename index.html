@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (排除申選圖示排版版)</title>
+<title>影片播放器 + 右側筆記 (放大按鈕移至時間下方版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -315,9 +315,18 @@
   }
   #notes div.note:hover { background-color: #f2f2f2; }
   
-  #notes div.note .time {
+  /* 左側時間與放大縮小按鈕群組容器 */
+  #notes div.note .left-col {
     flex-shrink: 0;
     width: 46px;
+    margin-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 2;
+  }
+  
+  #notes div.note .time {
     background-color: #e9e9e9;
     color: #555;
     text-align: center;
@@ -325,9 +334,29 @@
     font-size: 10px;
     border-radius: 2px;
     padding: 1px 2px;
-    margin-right: 4px;
-    z-index: 1;
   }
+
+  /* 放在時間下方的放大縮小按鈕 */
+  .img-zoom-controls {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+  }
+  .zoom-btn {
+    background: #f8f9fa;
+    border: 1px solid #ccc;
+    color: #333;
+    font-size: 10px;
+    font-weight: bold;
+    width: 20px;
+    height: 16px;
+    line-height: 14px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 2px;
+    padding: 0;
+  }
+  .zoom-btn:hover { background: #0000FF; color: #fff; border-color: #0000FF; }
   
   #notes div.note .text {
     flex-grow: 1;
@@ -337,16 +366,6 @@
     line-height: 1.3;
   }
   
-  /* 申與選專用行內 SVG 圖示樣式 (不影響排版) */
-  img.custom-icon-img {
-    width: 14px !important;
-    height: 14px !important;
-    vertical-align: middle !important;
-    margin: 0 1px !important;
-    display: inline-block !important;
-    max-height: 14px !important;
-  }
-
   /* 下方筆記區圖片縮放與限高 */
   .note-img-wrapper {
     position: relative;
@@ -364,7 +383,7 @@
     transform-origin: top left;
   }
 
-  /* 右上角筆記功能按鈕群組 (修改、刪除) */
+  /* 右上角筆記功能按鈕群組 (原圖連結、修改、刪除) */
   .note-actions {
     position: absolute;
     right: 2px;
@@ -381,38 +400,6 @@
   #notes div.note:hover .note-actions {
     opacity: 1;
   }
-
-  /* 放置在修改/刪除按鈕下方的放大縮小按鈕群組 */
-  .img-zoom-controls {
-    position: absolute;
-    right: 2px;
-    top: 22px;
-    display: none;
-    gap: 2px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2px;
-    border-radius: 2px;
-    border: 1px solid #ddd;
-    z-index: 9;
-  }
-  #notes div.note:hover .img-zoom-controls {
-    display: flex;
-  }
-  .zoom-btn {
-    background: #f8f9fa;
-    border: 1px solid #ccc;
-    color: #333;
-    font-size: 10px;
-    font-weight: bold;
-    width: 16px;
-    height: 16px;
-    line-height: 14px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 2px;
-    padding: 0;
-  }
-  .zoom-btn:hover { background: #0000FF; color: #fff; border-color: #0000FF; }
   
   #notes div.note .text:hover,
   #notes div.note:has(.note-actions:hover) .text {
@@ -826,7 +813,6 @@ function parseImageUrls(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
-  // 1. 轉譯圖片 Badge
   div.querySelectorAll('.img-badge').forEach(el => {
     const imgUrl = el.getAttribute('data-img-url');
     if (imgUrl) {
@@ -835,7 +821,6 @@ function parseImageUrls(html) {
     }
   });
 
-  // 2. 轉譯實體 img 標籤（嚴格排除申、選這類 SVG 圖示）
   div.querySelectorAll('img').forEach(img => {
     const isSvgIcon = img.src.startsWith('data:image/svg+xml') || img.classList.contains('custom-icon-img');
     if (!isSvgIcon && !img.closest('.note-img-wrapper') && !img.closest('.custom-icon-btn')) {
@@ -847,7 +832,6 @@ function parseImageUrls(html) {
     }
   });
 
-  // 3. 純文字連結自動解析
   function walk(node) {
     if (node.nodeType === Node.TEXT_NODE) {
       let text = node.nodeValue;
@@ -936,9 +920,14 @@ function renderNotes() {
       }
     };
 
+    // 左側時間與放大縮小按鈕群組容器
+    const leftCol = document.createElement('div');
+    leftCol.className = "left-col";
+
     const timeDiv = document.createElement('div');
     timeDiv.className = "time";
     timeDiv.textContent = formatTime(note.time);
+    leftCol.appendChild(timeDiv);
 
     const textDiv = document.createElement('div');
     textDiv.className = "text";
@@ -996,7 +985,7 @@ function renderNotes() {
     actionsDiv.appendChild(editBtn);
     actionsDiv.appendChild(delBtn);
 
-    // 只在包含大圖片時建立放大/縮小與連結按鈕（自動忽略申/選小圖示）
+    // 檢查是否含有大圖片，如果有則加入原圖按鈕與時間下方的 +/- 按鈕
     const realImages = Array.from(textDiv.querySelectorAll('.note-img-wrapper img')).filter(img => !img.classList.contains('custom-icon-img'));
     if (realImages.length > 0) {
       const firstImg = realImages[0];
@@ -1010,6 +999,7 @@ function renderNotes() {
       };
       actionsDiv.insertBefore(imgLinkBtn, editBtn);
 
+      // 放置於左側時間下方的放大縮小按鈕
       const zoomControls = document.createElement('div');
       zoomControls.className = 'img-zoom-controls';
 
@@ -1043,10 +1033,10 @@ function renderNotes() {
 
       zoomControls.appendChild(zoomInBtn);
       zoomControls.appendChild(zoomOutBtn);
-      div.appendChild(zoomControls);
+      leftCol.appendChild(zoomControls);
     }
 
-    div.appendChild(timeDiv);
+    div.appendChild(leftCol);
     div.appendChild(textDiv);
     div.appendChild(actionsDiv);
     notesDiv.appendChild(div);
