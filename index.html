@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (圖片Hover與拖曳終極修復版)</title>
+<title>影片播放器 + 右側筆記 (絕對穩定的圖片縮放版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -391,13 +391,10 @@
     object-fit: contain !important;
   }
 
-  /* 下方筆記區圖片：強化 hover 與點擊預覽指示 */
   .note-img-wrapper {
     position: relative;
     display: inline-block;
     margin: 2px 0;
-    cursor: zoom-in;
-    z-index: 5;
   }
   .note-img-wrapper img {
     max-width: 100% !important;
@@ -406,7 +403,7 @@
     height: auto !important;
     vertical-align: middle;
     display: block;
-    transition: transform 0.2s ease;
+    transition: transform 0.1s ease;
     transform-origin: top left;
   }
 
@@ -419,7 +416,7 @@
     gap: 2px;
     opacity: 0.3;
     transition: opacity 0.2s ease;
-    z-index: 10;
+    z-index: 15;
     background: rgba(255,255,255,0.9);
     padding: 1px;
     border-radius: 2px;
@@ -434,7 +431,7 @@
     white-space: pre-wrap;
     word-break: break-all;
     background: #fff;
-    z-index: 2;
+    z-index: 8;
     position: relative;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
@@ -475,14 +472,14 @@
   #loadBtn { background-color: #6c757d; }
   #loadBtn:hover { background-color: #5a6268; }
 
-  /* 💡 圖片預覽燈箱 Modal 與抓手拖曳平移游標 */
+  /* 全螢幕大圖燈箱 Modal */
   #imageModal {
     display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 9999;
+    background: rgba(0, 0, 0, 0.88);
+    z-index: 99999;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -517,7 +514,7 @@
 <input type="file" id="videoInput" accept="video/*" />
 <video id="videoPlayer" autoplay controls></video>
 
-<!-- 圖片預覽燈箱 Modal -->
+<!-- 圖片點擊放大與抓手拖曳全螢幕燈箱 Modal -->
 <div id="imageModal" onclick="closeImageModal()">
   <img id="modalImg" src="" alt="預覽大圖" onclick="event.stopPropagation()" />
 </div>
@@ -529,12 +526,10 @@
   <div class="corner-handle" id="handle-br"></div>
 
   <form id="addNoteForm">
-    <!-- 第一行：時間、新增按鈕、字體大小、超連結、插入圖片按鈕 -->
     <div class="time-submit-row">
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
-      <!-- 字體大小下拉選單按鈕 -->
       <div class="font-size-wrapper">
         <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)">大小 ▾</button>
         <div id="fontSizeDropdown" class="font-size-dropdown">
@@ -548,54 +543,42 @@
         </div>
       </div>
 
-      <!-- 超連結 -->
       <button type="button" class="toolbar-btn" id="linkBtn" onmousedown="saveSelection(event)" onclick="insertLink()" title="插入超連結">🔗</button>
-
-      <!-- 插入圖片按鈕 -->
       <button type="button" class="toolbar-btn" id="imgBtn" onmousedown="saveSelection(event)" onclick="insertImageBadge()" title="插入圖片網址">📷</button>
     </div>
 
-    <!-- 第二行：申、選、符號、粗體、文字顏色、醒目顏色、§、⮕、⭕、❌ -->
     <div class="toolbar-row">
-      <!-- 申圖示按鈕 -->
+      <!-- ↩️ 復原 (Undo) 按鈕 -->
+      <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleUndo()" title="復原 (Undo)">↩️</button>
+      <!-- ↪️ 取消復原 (Redo) 按鈕 -->
+      <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleRedo()" title="取消復原 (Redo)">↪️</button>
+
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
         <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
       </button>
 
-      <!-- 選圖示按鈕 -->
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
         <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
       </button>
 
-      <!-- 符號選單 -->
       <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
       <div id="symbolPicker"></div>
 
-      <!-- 粗體 -->
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
 
-      <!-- 文字顏色 -->
       <div class="color-picker-wrapper">
         <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('textColorPalette', event)" title="文字顏色">A<span style="display:block; height:3px; background:#000; margin-top:1px;"></span></button>
         <div id="textColorPalette" class="color-palette"></div>
       </div>
 
-      <!-- 醒目顯示顏色 -->
       <div class="color-picker-wrapper">
         <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
         <div id="hiliteColorPalette" class="color-palette"></div>
       </div>
 
-      <!-- 快捷符號 § -->
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('§')" title="插入 §">§</button>
-
-      <!-- 快捷符號 ⮕ -->
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⮕')" title="插入 ⮕">⮕</button>
-
-      <!-- 快捷符號 ⭕ -->
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⭕')" title="插入 ⭕">⭕</button>
-
-      <!-- 快捷符號 ❌ -->
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('❌')" title="插入 ❌">❌</button>
     </div>
     
@@ -625,6 +608,7 @@ const loadNotesFile = document.getElementById('loadNotesFile');
 const notesContainer = document.getElementById('notesContainer');
 const symbolPicker = document.getElementById('symbolPicker');
 const fontSizeDropdown = document.getElementById('fontSizeDropdown');
+
 const imageModal = document.getElementById('imageModal');
 const modalImg = document.getElementById('modalImg');
 
@@ -632,13 +616,87 @@ let notes = [];
 let editingIndex = null;
 let savedRange = null;
 
+let historyStack = [];
+let redoStack = [];
+
+function saveHistoryState() {
+  const state = {
+    notes: JSON.parse(JSON.stringify(notes)),
+    inputText: noteTextInput.innerHTML,
+    inputTime: noteTimeInput.value,
+    editingIndex: editingIndex
+  };
+  historyStack.push(state);
+  if (historyStack.length > 40) historyStack.shift();
+  redoStack = [];
+}
+
+function handleUndo() {
+  if (historyStack.length === 0) {
+    document.execCommand('undo');
+    return;
+  }
+  const currentState = {
+    notes: JSON.parse(JSON.stringify(notes)),
+    inputText: noteTextInput.innerHTML,
+    inputTime: noteTimeInput.value,
+    editingIndex: editingIndex
+  };
+  redoStack.push(currentState);
+
+  const previousState = historyStack.pop();
+  notes = previousState.notes;
+  noteTextInput.innerHTML = previousState.inputText;
+  noteTimeInput.value = previousState.inputTime;
+  editingIndex = previousState.editingIndex;
+
+  if (editingIndex !== null) {
+    submitBtn.textContent = "💾 儲存修改";
+    submitBtn.classList.add("editing");
+  } else {
+    submitBtn.textContent = "新增筆記";
+    submitBtn.classList.remove("editing");
+  }
+
+  renderNotes();
+}
+
+function handleRedo() {
+  if (redoStack.length === 0) {
+    document.execCommand('redo');
+    return;
+  }
+  const currentState = {
+    notes: JSON.parse(JSON.stringify(notes)),
+    inputText: noteTextInput.innerHTML,
+    inputTime: noteTimeInput.value,
+    editingIndex: editingIndex
+  };
+  historyStack.push(currentState);
+
+  const nextState = redoStack.pop();
+  notes = nextState.notes;
+  noteTextInput.innerHTML = nextState.inputText;
+  noteTimeInput.value = nextState.inputTime;
+  editingIndex = nextState.editingIndex;
+
+  if (editingIndex !== null) {
+    submitBtn.textContent = "💾 儲存修改";
+    submitBtn.classList.add("editing");
+  } else {
+    submitBtn.textContent = "新增筆記";
+    submitBtn.classList.remove("editing");
+  }
+
+  renderNotes();
+}
+
 let currentModalScale = 1;
 let modalTranslateX = 0;
 let modalTranslateY = 0;
 let isDraggingModal = false;
 let startDragX = 0;
 let startDragY = 0;
-let hoverTimer = null;
 
 function saveSelection(e) {
   e.preventDefault();
@@ -875,7 +933,7 @@ function toggleBold() {
   document.execCommand('bold', false, null);
 }
 
-/* 💡 開啟與關閉圖片預覽燈箱 Modal 與重置位置 */
+/* 全螢幕大圖燈箱 Modal */
 function openImageModal(url) {
   currentModalScale = 1;
   modalTranslateX = 0;
@@ -888,17 +946,12 @@ function openImageModal(url) {
 function closeImageModal() {
   imageModal.style.display = 'none';
   modalImg.src = '';
-  if (hoverTimer) {
-    clearTimeout(hoverTimer);
-    hoverTimer = null;
-  }
 }
 
 function updateModalTransform() {
   modalImg.style.transform = `translate(${modalTranslateX}px, ${modalTranslateY}px) scale(${currentModalScale})`;
 }
 
-/* 💡 燈箱視窗內滾輪縮放 (放大鏡/縮小鏡) */
 imageModal.addEventListener('wheel', (e) => {
   e.preventDefault();
   if (e.deltaY < 0) {
@@ -909,9 +962,8 @@ imageModal.addEventListener('wheel', (e) => {
   updateModalTransform();
 });
 
-/* 💡 燈箱圖片拖曳平移 (抓手移動查看圖片) */
 modalImg.addEventListener('mousedown', (e) => {
-  if (e.button !== 0) return; // 僅限左鍵
+  if (e.button !== 0) return;
   isDraggingModal = true;
   startDragX = e.clientX - modalTranslateX;
   startDragY = e.clientY - modalTranslateY;
@@ -929,7 +981,7 @@ window.addEventListener('mouseup', () => {
   isDraggingModal = false;
 });
 
-/* 渲染下方筆記區 */
+/* 渲染筆記區 */
 function parseImageUrls(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
@@ -1011,37 +1063,6 @@ function createImgContainer(url) {
   const img = document.createElement('img');
   img.src = url;
 
-  // 💡 徹底修復 Hover 預覽邏輯（加上 200ms 防抖避免瞬間遮罩觸發 mouseleave 衝突）
-  img.addEventListener('mouseenter', (e) => {
-    e.stopPropagation();
-    if (hoverTimer) clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => {
-      openImageModal(url);
-    }, 200);
-  });
-
-  img.addEventListener('mouseleave', (e) => {
-    e.stopPropagation();
-    if (hoverTimer) {
-      clearTimeout(hoverTimer);
-      hoverTimer = null;
-    }
-  });
-
-  // 點擊圖片也可直接開啟
-  img.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (hoverTimer) clearTimeout(hoverTimer);
-    openImageModal(url);
-  });
-
-  let currentScale = 1;
-  wrapper.dataset.zoom = 1;
-  wrapper.zoomImage = (delta) => {
-    currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
-    img.style.transform = `scale(${currentScale})`;
-  };
-
   imgWrapper.appendChild(img);
   wrapper.appendChild(imgWrapper);
 
@@ -1064,7 +1085,6 @@ function renderNotes() {
       }
     };
 
-    // 左側時間與控制按鈕群組容器
     const leftCol = document.createElement('div');
     leftCol.className = "left-col";
 
@@ -1103,6 +1123,7 @@ function renderNotes() {
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
       e.stopPropagation();
+      saveHistoryState();
       noteTimeInput.value = formatTime(note.time);
       noteTextInput.innerHTML = note.text;
       editingIndex = idx;
@@ -1118,6 +1139,7 @@ function renderNotes() {
     delBtn.onclick = (e) => {
       e.stopPropagation();
       if(confirm("確定要刪除此筆記？")) {
+        saveHistoryState();
         notes.splice(idx, 1);
         if (editingIndex === idx) {
           resetForm();
@@ -1129,7 +1151,6 @@ function renderNotes() {
     actionsDiv.appendChild(editBtn);
     actionsDiv.appendChild(delBtn);
 
-    // 檢查是否含有大圖片
     const realImages = Array.from(textDiv.querySelectorAll('.note-img-wrapper img')).filter(img => !img.classList.contains('custom-icon-img'));
     if (realImages.length > 0) {
       const firstImg = realImages[0];
@@ -1143,35 +1164,35 @@ function renderNotes() {
       };
       actionsDiv.insertBefore(imgLinkBtn, editBtn);
 
-      // 放置於左側時間下方的放大縮小按鈕
       const zoomControls = document.createElement('div');
       zoomControls.className = 'img-zoom-controls';
 
+      /* 💡 修正：直接透過 DOM 讀取與修改圖片的 scale 縮放比例，百分之百生效 */
       const zoomInBtn = document.createElement('button');
       zoomInBtn.className = 'zoom-btn';
       zoomInBtn.textContent = '+';
-      zoomInBtn.title = '放大圖片';
+      zoomInBtn.title = '放大筆記小圖';
       zoomInBtn.onclick = (e) => {
         e.stopPropagation();
-        realImages.forEach(img => {
-          let current = parseFloat(img.dataset.scale || '1');
-          current = Math.min(3, current + 0.25);
-          img.dataset.scale = current;
-          img.style.transform = `scale(${current})`;
+        textDiv.querySelectorAll('.note-img-wrapper img').forEach(img => {
+          let currentScale = parseFloat(img.dataset.scale || "1");
+          currentScale = Math.min(3, currentScale + 0.25);
+          img.dataset.scale = currentScale;
+          img.style.transform = `scale(${currentScale})`;
         });
       };
 
       const zoomOutBtn = document.createElement('button');
       zoomOutBtn.className = 'zoom-btn';
       zoomOutBtn.textContent = '-';
-      zoomOutBtn.title = '縮小圖片';
+      zoomOutBtn.title = '縮小筆記小圖';
       zoomOutBtn.onclick = (e) => {
         e.stopPropagation();
-        realImages.forEach(img => {
-          let current = parseFloat(img.dataset.scale || '1');
-          current = Math.max(0.5, current - 0.25);
-          img.dataset.scale = current;
-          img.style.transform = `scale(${current})`;
+        textDiv.querySelectorAll('.note-img-wrapper img').forEach(img => {
+          let currentScale = parseFloat(img.dataset.scale || "1");
+          currentScale = Math.max(0.5, currentScale - 0.25);
+          img.dataset.scale = currentScale;
+          img.style.transform = `scale(${currentScale})`;
         });
       };
 
@@ -1179,11 +1200,10 @@ function renderNotes() {
       zoomControls.appendChild(zoomOutBtn);
       leftCol.appendChild(zoomControls);
 
-      // 預覽圖片按鈕（🖼️）
       const previewBtn = document.createElement('button');
       previewBtn.className = 'preview-btn';
       previewBtn.textContent = '🖼️ 預覽';
-      previewBtn.title = '彈出圖片預覽視窗';
+      previewBtn.title = '彈出可拖曳大圖視窗';
       previewBtn.onclick = (e) => {
         e.stopPropagation();
         openImageModal(firstImg.src);
@@ -1239,6 +1259,8 @@ function handleFormSubmit() {
     return;
   }
 
+  saveHistoryState();
+
   if (editingIndex !== null) {
     notes[editingIndex] = {time: t, text};
   } else {
@@ -1288,6 +1310,7 @@ loadNotesFile.addEventListener('change', () => {
       try {
         const loadedNotes = JSON.parse(e.target.result);
         if(Array.isArray(loadedNotes)){
+          saveHistoryState();
           notes = loadedNotes.filter(n => typeof n.time === 'number' && typeof n.text === 'string');
           renderNotes();
         } else {
@@ -1313,6 +1336,28 @@ input.addEventListener('change', e => {
 window.addEventListener('keydown', e => {
   const activeEl = document.activeElement;
   
+  if (e.key === 'F8') {
+    e.preventDefault();
+    video.pause();
+    return;
+  }
+  if (e.key === 'F7') {
+    e.preventDefault();
+    video.play();
+    return;
+  }
+
+  if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    handleUndo();
+    return;
+  }
+  if ((e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
+    e.preventDefault();
+    handleRedo();
+    return;
+  }
+
   if (e.key === 'Escape') {
     if (imageModal.style.display === 'flex') {
       closeImageModal();
