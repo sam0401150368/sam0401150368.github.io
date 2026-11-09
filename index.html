@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (字體大小一致修正版)</title>
+<title>影片播放器 + 右側筆記 (工具列調整版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -195,6 +195,7 @@
     border-radius: 3px;
     border: 1px solid #ddd;
     margin: 2px 0;
+    position: relative;
   }
   .color-dot {
     width: 14px;
@@ -249,26 +250,27 @@
   }
   .palette-color:hover { transform: scale(1.15); border-color: #333; }
 
+  /* 符號選單位置調整 */
   #symbolPicker {
     display: none;
     position: absolute;
     top: 26px;
-    left: 30px;
+    left: 0;
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     border-radius: 4px;
     padding: 4px;
     z-index: 100;
-    width: 180px;
+    width: 125px;
     flex-wrap: wrap;
     gap: 3px;
   }
   .symbol-item {
     display: inline-block;
-    width: 22px;
-    height: 22px;
-    line-height: 22px;
+    width: 21px;
+    height: 21px;
+    line-height: 21px;
     text-align: center;
     font-size: 12px;
     background: #f0f0f0;
@@ -284,7 +286,6 @@
     border-color: #0000FF;
   }
 
-  /* 💡 統一輸入區預設為極小字體 (1) */
   #noteText {
     width: 100%;
     min-height: 40px;
@@ -330,7 +331,6 @@
     font-size: 11px;
   }
 
-  /* 💡 統一下方筆記區的預設文字大小與輸入區一致 */
   #notes {
     flex: 1;
     overflow-y: auto;
@@ -582,34 +582,27 @@
       <button type="button" class="toolbar-btn" id="imgBtn" onmousedown="saveSelection(event)" onclick="insertImageBadge()" title="插入圖片網址">📷</button>
     </div>
 
+    <!-- 上方工具列 (已移除了 ★ 與 🖍️) -->
     <div class="toolbar-row">
       <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleUndo()" title="復原 (Undo)">↩️</button>
       <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleRedo()" title="取消復原 (Redo)">↪️</button>
-
-      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
-        <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
-      </button>
-
-      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
-        <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
-      </button>
-
-      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
-      <div id="symbolPicker"></div>
-
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
-
-      <div class="color-picker-wrapper">
-        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
-        <div id="hiliteColorPalette" class="color-palette"></div>
-      </div>
-
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('§')" title="插入 §">§</button>
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('【')" title="插入 【">【</button>
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('】')" title="插入 】">】</button>
+      <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⭐')" title="插入 ⭐">⭐</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⮕')" title="插入 ⮕">⮕</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('⭕')" title="插入 ⭕">⭕</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('❌')" title="插入 ❌">❌</button>
+      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('xuan')" title="插入選圖示">
+        <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='72' font-size='52' font-weight='bold' text-anchor='middle' fill='red'>選</text></svg>" alt="選">
+      </button>
+      <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
+        <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
+      </button>
     </div>
 
+    <!-- 下方顏色快捷列 (已在灰色按鈕後面放上 插入符號 與 醒目提醒顏色) -->
     <div class="color-quick-row">
       <span style="font-size:10px; color:#555; font-weight:bold; margin-right:2px;">顏色:</span>
       <span class="color-dot" style="background:#000000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#000000')" title="黑色"></span>
@@ -622,6 +615,16 @@
       <span class="color-dot" style="background:#00FFFF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#00FFFF')" title="青色"></span>
       <span class="color-dot" style="background:#FF00FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF00FF')" title="粉紅"></span>
       <span class="color-dot" style="background:#808080;" onmousedown="saveSelection(event)" onclick="changeTextColor('#808080')" title="灰色"></span>
+      
+      <!-- 插入符號按鈕 (移至灰色後面) -->
+      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號" style="margin-left: 4px; padding: 1px 5px;">★</button>
+      <div id="symbolPicker"></div>
+
+      <!-- 醒目提醒顏色按鈕 (移至最右側) -->
+      <div class="color-picker-wrapper" style="margin-left: 2px;">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色" style="padding: 1px 4px;">🖍️</button>
+        <div id="hiliteColorPalette" class="color-palette"></div>
+      </div>
     </div>
     
     <div id="noteText" contenteditable="true" placeholder="筆記內容 (可點 📷 插入圖片)"></div>
@@ -884,7 +887,7 @@ function togglePalette(paletteId, e) {
   palette.style.display = isShow ? 'none' : 'flex';
 }
 
-const symbols = ['⮕', '【', '】', '｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
+const symbols = ['｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
 
 symbols.forEach(sym => {
   const span = document.createElement('span');
