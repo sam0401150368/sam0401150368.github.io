@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (按鈕微調最終版)</title>
+<title>影片播放器 + 右側筆記 (大小按鈕一致化版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -83,6 +83,19 @@
   #submitBtn.editing { background: #ffc107; color: #333; }
   #submitBtn.editing:hover { background: #e0a800; }
 
+  #clearBtn {
+    padding: 3px 6px;
+    font-size: 11px;
+    background: #dc3545;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  #clearBtn:hover { background: #c82333; }
+
   .toolbar-row {
     display: flex;
     gap: 3px;
@@ -147,18 +160,21 @@
     position: relative;
     display: inline-block;
   }
+  
+  /* 💡 調整「大小」按鈕樣式，使其與其他按鈕風格一致 */
   .font-size-btn {
-    padding: 2px 6px;
+    padding: 2px 5px;
     font-size: 11px;
-    background: #f8f9fa;
-    border: 1px solid #ccc;
+    background: #555;
+    border: none;
     border-radius: 3px;
     cursor: pointer;
-    color: #333;
-    font-weight: bold;
+    color: white;
+    font-weight: normal;
     user-select: none;
+    white-space: nowrap;
   }
-  .font-size-btn:hover { background: #e9ecef; }
+  .font-size-btn:hover { background: #333; }
 
   .font-size-dropdown {
     display: none;
@@ -564,13 +580,15 @@
     <div class="time-submit-row">
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
+      <button type="button" id="clearBtn" onclick="resetForm()" title="清空目前輸入區">清除</button>
 
       <!-- 輸入框專用復原/取消復原 -->
       <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleInputUndo()" title="復原輸入 (Undo)">↩️</button>
       <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleInputRedo()" title="取消復原輸入 (Redo)">↪️</button>
 
+      <!-- 💡 「大小」按鈕（已移除三角形，外觀改為與其他工具列按鈕一致） -->
       <div class="font-size-wrapper">
-        <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)">大小 ▾</button>
+        <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)" title="字體大小">大小</button>
         <div id="fontSizeDropdown" class="font-size-dropdown">
           <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('1')">極小 (1)</div>
           <div class="font-size-item" onmousedown="event.preventDefault()" onclick="applyFontSize('2')">小 (2)</div>
@@ -586,7 +604,7 @@
       <button type="button" class="toolbar-btn" id="imgBtn" onmousedown="saveSelection(event)" onclick="insertImageBadge()" title="插入圖片網址">📷</button>
     </div>
 
-    <!-- 上方工具列 (已將 插入符號 與 醒目提醒顏色 移至 申 的右邊) -->
+    <!-- 上方工具列 -->
     <div class="toolbar-row">
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('§')" title="插入 §">§</button>
@@ -603,7 +621,6 @@
         <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
       </button>
 
-      <!-- 插入符號 與 醒目提醒顏色 移至此處 -->
       <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
       <div id="symbolPicker"></div>
 
@@ -613,7 +630,7 @@
       </div>
     </div>
 
-    <!-- 下方顏色排 (已去除「顏色:」二字，並在灰色後面放上下方筆記專用的復原與取消復原按鈕) -->
+    <!-- 下方顏色排 -->
     <div class="color-quick-row">
       <span class="color-dot" style="background:#000000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#000000')" title="黑色"></span>
       <span class="color-dot" style="background:#FF0000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF0000')" title="紅色"></span>
@@ -626,7 +643,6 @@
       <span class="color-dot" style="background:#FF00FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF00FF')" title="粉紅"></span>
       <span class="color-dot" style="background:#808080;" onmousedown="saveSelection(event)" onclick="changeTextColor('#808080')" title="灰色"></span>
       
-      <!-- 下方筆記區專屬的復原與取消復原按鈕 (移至顏色後面) -->
       <button type="button" class="toolbar-btn" onclick="handleListUndo()" title="復原下方筆記列表變更" style="font-size:9.5px; padding:1px 4px; background:#444;">↩️筆記復原</button>
       <button type="button" class="toolbar-btn" onclick="handleListRedo()" title="取消復原下方筆記列表變更" style="font-size:9.5px; padding:1px 4px; background:#444;">↪️取消</button>
     </div>
