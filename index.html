@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (工具列調整版)</title>
+<title>影片播放器 + 右側筆記 (按鈕微調最終版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -188,7 +188,7 @@
 
   .color-quick-row {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     align-items: center;
     background: #f1f3f5;
     padding: 2px 4px;
@@ -196,10 +196,11 @@
     border: 1px solid #ddd;
     margin: 2px 0;
     position: relative;
+    flex-wrap: wrap;
   }
   .color-dot {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     cursor: pointer;
     border: 1px solid #bbb;
@@ -250,7 +251,6 @@
   }
   .palette-color:hover { transform: scale(1.15); border-color: #333; }
 
-  /* 符號選單位置調整 */
   #symbolPicker {
     display: none;
     position: absolute;
@@ -565,6 +565,10 @@
       <input type="text" id="noteTime" placeholder="時間" required />
       <button type="submit" id="submitBtn">新增筆記</button>
 
+      <!-- 輸入框專用復原/取消復原 -->
+      <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleInputUndo()" title="復原輸入 (Undo)">↩️</button>
+      <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleInputRedo()" title="取消復原輸入 (Redo)">↪️</button>
+
       <div class="font-size-wrapper">
         <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)">大小 ▾</button>
         <div id="fontSizeDropdown" class="font-size-dropdown">
@@ -582,10 +586,8 @@
       <button type="button" class="toolbar-btn" id="imgBtn" onmousedown="saveSelection(event)" onclick="insertImageBadge()" title="插入圖片網址">📷</button>
     </div>
 
-    <!-- 上方工具列 (已移除了 ★ 與 🖍️) -->
+    <!-- 上方工具列 (已將 插入符號 與 醒目提醒顏色 移至 申 的右邊) -->
     <div class="toolbar-row">
-      <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleUndo()" title="復原 (Undo)">↩️</button>
-      <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleRedo()" title="取消復原 (Redo)">↪️</button>
       <button type="button" id="boldBtn" onmousedown="saveSelection(event)" onclick="toggleBold()" title="粗體"><b>B</b></button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('§')" title="插入 §">§</button>
       <button type="button" class="toolbar-btn" onmousedown="saveSelection(event)" onclick="insertDirectSymbol('【')" title="插入 【">【</button>
@@ -600,11 +602,19 @@
       <button type="button" class="custom-icon-btn" onmousedown="saveSelection(event)" onclick="insertCustomImage('shen')" title="插入申圖示">
         <img class="custom-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='red' stroke-width='8'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='black'>申</text></svg>" alt="申">
       </button>
+
+      <!-- 插入符號 與 醒目提醒顏色 移至此處 -->
+      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號">★</button>
+      <div id="symbolPicker"></div>
+
+      <div class="color-picker-wrapper">
+        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色">🖍️</button>
+        <div id="hiliteColorPalette" class="color-palette"></div>
+      </div>
     </div>
 
-    <!-- 下方顏色快捷列 (已在灰色按鈕後面放上 插入符號 與 醒目提醒顏色) -->
+    <!-- 下方顏色排 (已去除「顏色:」二字，並在灰色後面放上下方筆記專用的復原與取消復原按鈕) -->
     <div class="color-quick-row">
-      <span style="font-size:10px; color:#555; font-weight:bold; margin-right:2px;">顏色:</span>
       <span class="color-dot" style="background:#000000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#000000')" title="黑色"></span>
       <span class="color-dot" style="background:#FF0000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF0000')" title="紅色"></span>
       <span class="color-dot" style="background:#8A2BE2;" onmousedown="saveSelection(event)" onclick="changeTextColor('#8A2BE2')" title="紫色"></span>
@@ -616,15 +626,9 @@
       <span class="color-dot" style="background:#FF00FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF00FF')" title="粉紅"></span>
       <span class="color-dot" style="background:#808080;" onmousedown="saveSelection(event)" onclick="changeTextColor('#808080')" title="灰色"></span>
       
-      <!-- 插入符號按鈕 (移至灰色後面) -->
-      <button type="button" class="toolbar-btn" id="symbolBtn" onmousedown="saveSelection(event)" onclick="toggleSymbolPicker(event)" title="插入符號" style="margin-left: 4px; padding: 1px 5px;">★</button>
-      <div id="symbolPicker"></div>
-
-      <!-- 醒目提醒顏色按鈕 (移至最右側) -->
-      <div class="color-picker-wrapper" style="margin-left: 2px;">
-        <button type="button" class="doc-color-btn" onmousedown="saveSelection(event)" onclick="togglePalette('hiliteColorPalette', event)" title="醒目顯示顏色" style="padding: 1px 4px;">🖍️</button>
-        <div id="hiliteColorPalette" class="color-palette"></div>
-      </div>
+      <!-- 下方筆記區專屬的復原與取消復原按鈕 (移至顏色後面) -->
+      <button type="button" class="toolbar-btn" onclick="handleListUndo()" title="復原下方筆記列表變更" style="font-size:9.5px; padding:1px 4px; background:#444;">↩️筆記復原</button>
+      <button type="button" class="toolbar-btn" onclick="handleListRedo()" title="取消復原下方筆記列表變更" style="font-size:9.5px; padding:1px 4px; background:#444;">↪️取消</button>
     </div>
     
     <div id="noteText" contenteditable="true" placeholder="筆記內容 (可點 📷 插入圖片)"></div>
@@ -662,79 +666,78 @@ let notes = [];
 let editingIndex = null;
 let savedRange = null;
 
-let historyStack = [];
-let redoStack = [];
+let textInputHistory = [];
+let textInputRedo = [];
+let lastInputHtml = "";
 
-function saveHistoryState() {
-  const state = {
-    notes: JSON.parse(JSON.stringify(notes)),
-    inputText: noteTextInput.innerHTML,
-    inputTime: noteTimeInput.value,
-    editingIndex: editingIndex
-  };
-  historyStack.push(state);
-  if (historyStack.length > 40) historyStack.shift();
-  redoStack = [];
+function recordTextInputState() {
+  const currentHtml = noteTextInput.innerHTML;
+  if (currentHtml !== lastInputHtml) {
+    textInputHistory.push(lastInputHtml);
+    if (textInputHistory.length > 50) textInputHistory.shift();
+    textInputRedo = [];
+    lastInputHtml = currentHtml;
+  }
 }
 
-function handleUndo() {
-  if (historyStack.length === 0) {
-    document.execCommand('undo');
-    return;
+function handleInputUndo() {
+  if (textInputHistory.length > 0) {
+    textInputRedo.push(noteTextInput.innerHTML);
+    const prevHtml = textInputHistory.pop();
+    noteTextInput.innerHTML = prevHtml;
+    lastInputHtml = prevHtml;
+    updateBoldButtonState();
   }
-  const currentState = {
-    notes: JSON.parse(JSON.stringify(notes)),
-    inputText: noteTextInput.innerHTML,
-    inputTime: noteTimeInput.value,
-    editingIndex: editingIndex
-  };
-  redoStack.push(currentState);
-
-  const previousState = historyStack.pop();
-  notes = previousState.notes;
-  noteTextInput.innerHTML = previousState.inputText;
-  noteTimeInput.value = previousState.inputTime;
-  editingIndex = previousState.editingIndex;
-
-  if (editingIndex !== null) {
-    submitBtn.textContent = "💾 儲存修改";
-    submitBtn.classList.add("editing");
-  } else {
-    submitBtn.textContent = "新增筆記";
-    submitBtn.classList.remove("editing");
-  }
-
-  renderNotes();
 }
 
-function handleRedo() {
-  if (redoStack.length === 0) {
-    document.execCommand('redo');
-    return;
+function handleInputRedo() {
+  if (textInputRedo.length > 0) {
+    textInputHistory.push(noteTextInput.innerHTML);
+    const nextHtml = textInputRedo.pop();
+    noteTextInput.innerHTML = nextHtml;
+    lastInputHtml = nextHtml;
+    updateBoldButtonState();
   }
-  const currentState = {
-    notes: JSON.parse(JSON.stringify(notes)),
-    inputText: noteTextInput.innerHTML,
-    inputTime: noteTimeInput.value,
-    editingIndex: editingIndex
-  };
-  historyStack.push(currentState);
+}
 
-  const nextState = redoStack.pop();
-  notes = nextState.notes;
-  noteTextInput.innerHTML = nextState.inputText;
-  noteTimeInput.value = nextState.inputTime;
-  editingIndex = nextState.editingIndex;
+let notesListHistory = [];
+let notesListRedo = [];
 
-  if (editingIndex !== null) {
-    submitBtn.textContent = "💾 儲存修改";
-    submitBtn.classList.add("editing");
+function saveNotesListState() {
+  const currentState = JSON.parse(JSON.stringify(notes));
+  if (notesListHistory.length === 0 || JSON.stringify(notesListHistory[notesListHistory.length - 1]) !== JSON.stringify(currentState)) {
+    notesListHistory.push(currentState);
+    if (notesListHistory.length > 50) notesListHistory.shift();
+    notesListRedo = [];
+  }
+}
+
+function handleListUndo() {
+  if (notesListHistory.length > 1) {
+    notesListRedo.push(JSON.parse(JSON.stringify(notes)));
+    notesListHistory.pop(); 
+    const previousState = notesListHistory[notesListHistory.length - 1];
+    notes = JSON.parse(JSON.stringify(previousState));
+    renderNotes();
+  } else if (notesListHistory.length === 1) {
+    notesListRedo.push(JSON.parse(JSON.stringify(notes)));
+    notesListHistory.pop();
+    notes = [];
+    renderNotes();
   } else {
-    submitBtn.textContent = "新增筆記";
-    submitBtn.classList.remove("editing");
+    alert("已經是最早的筆記狀態了！");
   }
+}
 
-  renderNotes();
+function handleListRedo() {
+  if (notesListRedo.length > 0) {
+    notesListHistory.push(JSON.parse(JSON.stringify(notes)));
+    const nextState = notesListRedo.pop();
+    notes = JSON.parse(JSON.stringify(nextState));
+    renderNotes();
+  } else {
+    alert("沒有可取消復原的筆記狀態！");
+  }
 }
 
 let currentModalScale = 1;
@@ -771,10 +774,12 @@ function toggleFontSizeDropdown(e) {
 }
 
 function applyFontSize(size) {
+  recordTextInputState();
   restoreSelection();
   noteTextInput.focus();
   document.execCommand('fontSize', false, size);
   fontSizeDropdown.style.display = 'none';
+  recordTextInputState();
 }
 
 function closeAllPopups() {
@@ -784,12 +789,15 @@ function closeAllPopups() {
 }
 
 function insertDirectSymbol(sym) {
+  recordTextInputState();
   restoreSelection();
   noteTextInput.focus();
   document.execCommand('insertText', false, sym);
+  recordTextInputState();
 }
 
 function insertCustomImage(type) {
+  recordTextInputState();
   restoreSelection();
   noteTextInput.focus();
   
@@ -813,6 +821,7 @@ function insertCustomImage(type) {
   } else {
     noteTextInput.appendChild(img);
   }
+  recordTextInputState();
 }
 
 function formatImageUrl(url) {
@@ -829,6 +838,7 @@ function insertImageBadge() {
   let url = prompt("請輸入圖片網址 (Imgur 或一般圖片網址):");
   if (!url) return;
   
+  recordTextInputState();
   const cleanUrl = formatImageUrl(url);
   noteTextInput.focus();
 
@@ -856,6 +866,7 @@ function insertImageBadge() {
     noteTextInput.appendChild(span);
     noteTextInput.appendChild(space);
   }
+  recordTextInputState();
 }
 
 const colorList = [
@@ -887,7 +898,7 @@ function togglePalette(paletteId, e) {
   palette.style.display = isShow ? 'none' : 'flex';
 }
 
-const symbols = ['｢', '｣', '①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
+const symbols = ['①', '②', '③', '④', '⑤', '⑴', '⑵', '⑶', '⑷', '⑸', '㈠', '㈡', '㈢', '㈣', '㈤'];
 
 symbols.forEach(sym => {
   const span = document.createElement('span');
@@ -911,14 +922,18 @@ function toggleSymbolPicker(e) {
 }
 
 function insertSymbol(sym) {
+  recordTextInputState();
   noteTextInput.focus();
   document.execCommand('insertText', false, sym);
+  recordTextInputState();
 }
 
 function insertLink() {
   restoreSelection();
   const url = prompt("請輸入超連結網址 (例如 https://example.com):");
   if (!url) return;
+  
+  recordTextInputState();
   noteTextInput.focus();
   
   const a = document.createElement('a');
@@ -942,6 +957,7 @@ function insertLink() {
   } else {
     noteTextInput.appendChild(a);
   }
+  recordTextInputState();
 }
 
 document.addEventListener('click', () => {
@@ -949,21 +965,27 @@ document.addEventListener('click', () => {
 });
 
 function changeTextColor(color) {
+  recordTextInputState();
   noteTextInput.focus();
   document.execCommand('foreColor', false, color);
   updateBoldButtonState();
+  recordTextInputState();
 }
 
 function changeHiliteColor(color) {
+  recordTextInputState();
   noteTextInput.focus();
   document.execCommand('hiliteColor', false, color);
+  recordTextInputState();
 }
 
 function toggleBold() {
+  recordTextInputState();
   restoreSelection();
   noteTextInput.focus();
   document.execCommand('bold', false, null);
   updateBoldButtonState();
+  recordTextInputState();
 }
 
 function updateBoldButtonState() {
@@ -977,9 +999,16 @@ function updateBoldButtonState() {
   } catch(e) {}
 }
 
+noteTextInput.addEventListener('input', () => {
+  recordTextInputState();
+  updateBoldButtonState();
+});
 noteTextInput.addEventListener('keyup', updateBoldButtonState);
 noteTextInput.addEventListener('mouseup', updateBoldButtonState);
-noteTextInput.addEventListener('focus', updateBoldButtonState);
+noteTextInput.addEventListener('focus', () => {
+  updateBoldButtonState();
+  lastInputHtml = noteTextInput.innerHTML;
+});
 
 function openImageModal(url) {
   currentModalScale = 1;
@@ -1176,9 +1205,10 @@ function renderNotes() {
     editBtn.textContent = "✏️";
     editBtn.onclick = (e) => {
       e.stopPropagation();
-      saveHistoryState();
+      saveNotesListState();
       noteTimeInput.value = formatTime(note.time);
       noteTextInput.innerHTML = note.text;
+      lastInputHtml = note.text;
       editingIndex = idx;
       submitBtn.textContent = "💾 儲存修改";
       submitBtn.classList.add("editing");
@@ -1193,12 +1223,13 @@ function renderNotes() {
     delBtn.onclick = (e) => {
       e.stopPropagation();
       if(confirm("確定要刪除此筆記？")) {
-        saveHistoryState();
+        saveNotesListState();
         notes.splice(idx, 1);
         if (editingIndex === idx) {
           resetForm();
         }
         renderNotes();
+        saveNotesListState();
       }
     };
 
@@ -1275,6 +1306,9 @@ function resetForm() {
   editingIndex = null;
   noteTimeInput.value = "";
   noteTextInput.innerHTML = "";
+  lastInputHtml = "";
+  textInputHistory = [];
+  textInputRedo = [];
   submitBtn.textContent = "新增筆記";
   submitBtn.classList.remove("editing");
   noteTextInput.focus();
@@ -1313,7 +1347,7 @@ function handleFormSubmit() {
     return;
   }
 
-  saveHistoryState();
+  saveNotesListState();
 
   if (editingIndex !== null) {
     notes[editingIndex] = {time: t, text};
@@ -1322,6 +1356,7 @@ function handleFormSubmit() {
   }
 
   renderNotes();
+  saveNotesListState();
   resetForm();
 }
 
@@ -1338,6 +1373,14 @@ noteTextInput.addEventListener('keydown', (e) => {
       e.preventDefault();
       handleFormSubmit();
     }
+  }
+  
+  if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    handleInputUndo();
+  } else if ((e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
+    e.preventDefault();
+    handleInputRedo();
   }
 });
 
@@ -1364,9 +1407,10 @@ loadNotesFile.addEventListener('change', () => {
       try {
         const loadedNotes = JSON.parse(e.target.result);
         if(Array.isArray(loadedNotes)){
-          saveHistoryState();
+          saveNotesListState();
           notes = loadedNotes.filter(n => typeof n.time === 'number' && typeof n.text === 'string');
           renderNotes();
+          saveNotesListState();
         } else {
           alert("載入筆記格式錯誤");
         }
@@ -1398,17 +1442,6 @@ window.addEventListener('keydown', e => {
   if (e.key === 'F7') {
     e.preventDefault();
     video.play();
-    return;
-  }
-
-  if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') {
-    e.preventDefault();
-    handleUndo();
-    return;
-  }
-  if ((e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
-    e.preventDefault();
-    handleRedo();
     return;
   }
 
@@ -1548,6 +1581,7 @@ window.addEventListener('mouseup', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   noteTextInput.focus();
+  saveNotesListState();
 });
 
 renderNotes();
