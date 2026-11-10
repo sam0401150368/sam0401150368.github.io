@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>影片播放器 + 右側筆記 (大小按鈕一致化版)</title>
+<title>影片播放器 + 右側筆記 (自訂綠色版)</title>
 <style>
   html, body {
     margin:0; padding:0; height:100%; background:black;
@@ -160,8 +160,6 @@
     position: relative;
     display: inline-block;
   }
-  
-  /* 💡 調整「大小」按鈕樣式，使其與其他按鈕風格一致 */
   .font-size-btn {
     padding: 2px 5px;
     font-size: 11px;
@@ -586,7 +584,6 @@
       <button type="button" class="toolbar-btn" id="undoBtn" onmousedown="saveSelection(event)" onclick="handleInputUndo()" title="復原輸入 (Undo)">↩️</button>
       <button type="button" class="toolbar-btn" id="redoBtn" onmousedown="saveSelection(event)" onclick="handleInputRedo()" title="取消復原輸入 (Redo)">↪️</button>
 
-      <!-- 💡 「大小」按鈕（已移除三角形，外觀改為與其他工具列按鈕一致） -->
       <div class="font-size-wrapper">
         <button type="button" class="font-size-btn" onmousedown="saveSelection(event)" onclick="toggleFontSizeDropdown(event)" title="字體大小">大小</button>
         <div id="fontSizeDropdown" class="font-size-dropdown">
@@ -630,7 +627,7 @@
       </div>
     </div>
 
-    <!-- 下方顏色排 -->
+    <!-- 下方顏色排 (已將其中一個綠色改為 #238641) -->
     <div class="color-quick-row">
       <span class="color-dot" style="background:#000000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#000000')" title="黑色"></span>
       <span class="color-dot" style="background:#FF0000;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF0000')" title="紅色"></span>
@@ -638,7 +635,7 @@
       <span class="color-dot" style="background:#0000FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#0000FF')" title="藍色"></span>
       <span class="color-dot" style="background:#FFA500;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FFA500')" title="橘色"></span>
       <span class="color-dot" style="background:#8B4513;" onmousedown="saveSelection(event)" onclick="changeTextColor('#8B4513')" title="咖啡色"></span>
-      <span class="color-dot" style="background:#00FF00;" onmousedown="saveSelection(event)" onclick="changeTextColor('#00FF00')" title="綠色"></span>
+      <span class="color-dot" style="background:#238641;" onmousedown="saveSelection(event)" onclick="changeTextColor('#238641')" title="自訂綠色"></span>
       <span class="color-dot" style="background:#00FFFF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#00FFFF')" title="青色"></span>
       <span class="color-dot" style="background:#FF00FF;" onmousedown="saveSelection(event)" onclick="changeTextColor('#FF00FF')" title="粉紅"></span>
       <span class="color-dot" style="background:#808080;" onmousedown="saveSelection(event)" onclick="changeTextColor('#808080')" title="灰色"></span>
